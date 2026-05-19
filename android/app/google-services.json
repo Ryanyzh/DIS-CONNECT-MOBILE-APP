@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "719701894023",
+    "project_id": "orbital-dis-connect",
+    "storage_bucket": "orbital-dis-connect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:719701894023:android:0c1bd615c0b21c361fe922",
+        "android_client_info": {
+          "package_name": "com.example.disconnect_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjN-oz0edeQmpGMmrvD_SwNSooAvpe1oI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
