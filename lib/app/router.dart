@@ -24,10 +24,7 @@ final appRouter = GoRouter(
 
   routes: [
     // ── Unauthenticated ──────────────────────────────────────────────────────
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
     // ── Authenticated shell (bottom nav) ─────────────────────────────────────
     StatefulShellRoute.indexedStack(
