@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/features/auth/data/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,9 +12,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authRepo = AuthRepository();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -20,6 +26,42 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your email and password.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authRepo.signInAndGetToken(email: email, password: password);
+      if (mounted) context.go('/tickets');
+    } on FirebaseAuthException catch (e) {
+      setState(() => _errorMessage = _friendlyError(e.code));
+    } catch (_) {
+      setState(() => _errorMessage = 'An unexpected error occurred.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _friendlyError(String code) => switch (code) {
+    'user-not-found' ||
+    'wrong-password' ||
+    'invalid-credential' => 'Incorrect email or password.',
+    'user-disabled' => 'This account has been disabled.',
+    'too-many-requests' => 'Too many attempts. Please try again later.',
+    'network-request-failed' => 'Check your internet connection.',
+    _ => 'Login failed. Please try again.',
+  };
 
   InputDecoration _buildInputDecoration({
     required String label,
@@ -85,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          enabled: !_isLoading,
                           decoration: _buildInputDecoration(
                             label: 'Email',
                             icon: Icons.email_outlined,
@@ -94,15 +138,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          enabled: !_isLoading,
+                          onSubmitted: (_) => _login(),
                           decoration: _buildInputDecoration(
                             label: 'Password',
                             icon: Icons.lock_outline,
                             suffix: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_off
@@ -116,9 +161,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              // TODO: connect forgot password flow
-                            },
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    // TODO: connect forgot password flow
+                                  },
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -129,6 +176,38 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: const Text('Forgot password?'),
                           ),
                         ),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.shade700,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -140,9 +219,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: SizedBox(
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () => context.go('/tickets'),
+                    onPressed: _isLoading ? null : _login,
                     style: AppButtonStyles.primary,
-                    child: const Text('Log In'),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Log In'),
                   ),
                 ),
               ),
