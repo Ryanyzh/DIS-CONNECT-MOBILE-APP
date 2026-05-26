@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authRepo.signInAndGetToken(email: email, password: password);
-      if (mounted) context.go('/tickets');
+      if (mounted) context.go('/home');
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = _friendlyError(e.code));
     } catch (_) {
