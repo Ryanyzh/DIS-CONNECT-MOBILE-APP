@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/features/home/widgets/greeting_header.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,67 +12,39 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      body: SafeArea(child: CustomScrollView(slivers: [
-            
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // ── Sticky search app-bar ───────────────────────────────────────
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: const Color(0xFFF5F7FA),
+              elevation: 0,
+              scrolledUnderElevation: 1,
+              shadowColor: Colors.black.withValues(alpha: 0.06),
+              toolbarHeight: 0, // header lives in the body
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Greeting ─────────────────────────────────────────
+                    const GreetingHeader(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
           ],
-        )),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Search bar widget
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _SearchBar extends StatelessWidget {
-  final VoidCallback? onFilter;
-  const _SearchBar({this.onFilter});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppBorderRadius.wisePill),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
         ),
-        const SizedBox(width: 10),
-        GestureDetector(
-          onTap: onFilter,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.tune_rounded,
-              color: Color(0xFF4F46E5),
-              size: 20,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

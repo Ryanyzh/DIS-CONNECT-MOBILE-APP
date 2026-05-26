@@ -1,3 +1,4 @@
+import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -97,8 +98,8 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
   });
 
-  static const _activeColor = Color(0xFF4338CA);
-  static const _inactiveColor = Color(0xFF94A3B8);
+  static const _activeColor = AppColors.positive;
+  static const _inactiveColor = AppColors.mute;
 
   @override
   Widget build(BuildContext context) {
