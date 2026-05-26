@@ -6,6 +6,7 @@ import 'package:disconnect_mobile/features/home/widgets/quick_actions_section.da
 import 'package:disconnect_mobile/features/home/widgets/overview_stats_card.dart';
 import 'package:disconnect_mobile/features/home/widgets/recent_tickets_section.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
+import 'package:disconnect_mobile/features/home/widgets/announcement_banner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -49,6 +50,11 @@ class HomeScreen extends StatelessWidget {
       createdAt: DateTime(2024, 5, 8),
     ),
   ];
+
+  static final AnnouncementItem _announcement = AnnouncementItem(
+    title: 'Overseas Exchange Briefing for May 2024',
+    date: DateTime(2024, 5, 15, 10, 30),
+  );
 
   // ---------------------------------------------------------------------------
 
@@ -103,6 +109,10 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 28),
+
+                    // ── Announcement banner ──────────────────────────────
+                    AnnouncementBanner(announcement: _announcement),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
