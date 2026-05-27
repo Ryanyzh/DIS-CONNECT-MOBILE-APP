@@ -57,7 +57,17 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 2 — Profile
+        // Branch 2 — Announcements
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/announcements',
+              builder: (context, state) => const AnnouncementsScreen(),
+            ),
+          ],
+        ),
+
+        // Branch 3 — Profile
         StatefulShellBranch(
           routes: [
             GoRoute(
