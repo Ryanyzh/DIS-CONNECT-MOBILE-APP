@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/home/widgets/greeting_header.dart';
 import 'package:disconnect_mobile/features/home/widgets/quick_actions_section.dart';
 import 'package:disconnect_mobile/features/home/widgets/overview_stats_card.dart';
@@ -51,15 +50,16 @@ class HomeScreen extends StatelessWidget {
     ),
   ];
 
-  static final AnnouncementItem _announcement = AnnouncementItem(
-    title: 'Overseas Exchange Briefing for May 2024',
-    date: DateTime(2024, 5, 15, 10, 30),
-  );
-
   // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
+    final announcement = AnnouncementItem(
+      title: 'Overseas Exchange Briefing for May 2024',
+      date: DateTime(2024, 5, 15, 10, 30),
+      onTap: () => context.go('/announcements'),
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
               elevation: 0,
               scrolledUnderElevation: 1,
               shadowColor: Colors.black.withValues(alpha: 0.06),
-              toolbarHeight: 0, // header lives in the body
+              toolbarHeight: 0,
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(0),
                 child: Container(),
@@ -111,7 +111,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 28),
 
                     // ── Announcement banner ──────────────────────────────
-                    AnnouncementBanner(announcement: _announcement),
+                    AnnouncementBanner(announcement: announcement),
                     const SizedBox(height: 32),
                   ],
                 ),
