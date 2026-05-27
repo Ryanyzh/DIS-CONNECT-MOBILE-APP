@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
+import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
+import 'package:disconnect_mobile/features/tickets/widgets/search_bar.dart';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // History entry — status change event shown in the list
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,7 +108,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
               automaticallyImplyLeading: false,
               pinned: true,
               title: Text(
-                'Ticket History',
+                'Tickets',
                 style: AppTypography.bodyMd.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppColors.ink,
@@ -116,6 +119,12 @@ class _TicketListScreenState extends State<TicketListScreen> {
             ),
 
             // ── Search bar ──────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: const SearchBar(),
+              ),
+            ),
 
             // ── Cards ───────────────────────────────────────────────────
             SliverPadding(
@@ -124,7 +133,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _HistoryCard(
+                    child: _TicketCard(
                       entry: visible[i],
                       onTap: () =>
                           context.go('/tickets/${visible[i].ticket.id}'),
@@ -142,14 +151,14 @@ class _TicketListScreenState extends State<TicketListScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// History card
+// Ticket card
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _HistoryCard extends StatelessWidget {
+class _TicketCard extends StatelessWidget {
   final TicketEntry entry;
   final VoidCallback onTap;
 
-  const _HistoryCard({required this.entry, required this.onTap});
+  const _TicketCard({required this.entry, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +194,7 @@ class _HistoryCard extends StatelessWidget {
                     color: AppColors.ink,
                   ),
                 ),
-                // add ticket status here
+                TicketStatusBadge(status: entry.ticket.status),
               ],
             ),
             const SizedBox(height: 10),

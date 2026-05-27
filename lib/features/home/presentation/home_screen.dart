@@ -104,9 +104,7 @@ class HomeScreen extends StatelessWidget {
                     RecentTicketsSection(
                       tickets: _recentTickets,
                       onViewAll: () => context.go('/tickets'),
-                      onTicketTap: (_) {
-                        // TODO: navigate to ticket detail
-                      },
+                      onTicketTap: (t) => context.push('/tickets/${t.id}'),
                     ),
                     const SizedBox(height: 28),
 

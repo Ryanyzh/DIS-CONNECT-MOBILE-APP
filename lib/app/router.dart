@@ -5,6 +5,7 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/tickets/presentation/ticket_list_screen.dart';
 import '../features/tickets/presentation/create_ticket_screen.dart';
+import '../features/tickets/presentation/ticket_detail_screen.dart';
 import '../features/announcements/presentation/announcements_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../shared/widgets/main_shell.dart';
@@ -51,6 +52,12 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: 'create',
                   builder: (context, state) => const CreateTicketScreen(),
+                ),
+                // Ticket detail — static 'create' is matched first by GoRouter
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      TicketDetailScreen(ticketId: state.pathParameters['id']!),
                 ),
               ],
             ),
