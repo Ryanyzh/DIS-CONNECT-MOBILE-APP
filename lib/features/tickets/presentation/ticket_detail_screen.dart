@@ -88,6 +88,11 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   // ── HR Officer ───────────────────────────────────────────
                   _SectionLabel(label: 'HR Officer'),
                   const SizedBox(height: 10),
+                  _OfficerCard(
+                    name: _detail.officerName,
+                    role: _detail.officerRole,
+                    initials: _detail.officerInitials,
+                  ),
                 ],
               ),
             ),
@@ -173,6 +178,67 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
           TicketStatusBadge(status: status, fontSize: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfficerCard extends StatelessWidget {
+  final String name;
+  final String role;
+  final String initials;
+  const _OfficerCard({
+    required this.name,
+    required this.role,
+    required this.initials,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE0E7FF),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initials,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF4338CA),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: AppTypography.bodySm.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(role, style: AppTypography.caption),
+              ],
+            ),
+          ),
         ],
       ),
     );
