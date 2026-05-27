@@ -49,16 +49,6 @@ class QuickActionsSection extends StatelessWidget {
                 onTap: () {},
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _ActionCard(
-                icon: Icons.notifications_outlined,
-                label: 'Announcements',
-                iconBg: const Color(0xFFDBEAFE),
-                iconColor: const Color(0xFF2563EB),
-                onTap: () => context.go('/announcements'),
-              ),
-            ),
           ],
         ),
       ],
