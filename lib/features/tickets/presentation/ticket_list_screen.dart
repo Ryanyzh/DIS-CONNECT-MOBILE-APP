@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
-import 'package:disconnect_mobile/features/tickets/widgets/search_bar.dart';
-
 // ─────────────────────────────────────────────────────────────────────────────
 // History entry — status change event shown in the list
 // ─────────────────────────────────────────────────────────────────────────────
