@@ -19,6 +19,11 @@ class MainShell extends StatelessWidget {
       activeIcon: Icons.confirmation_number_rounded,
     ),
     _TabItem(
+      label: 'Announcements',
+      icon: Icons.campaign_outlined,
+      activeIcon: Icons.campaign_rounded,
+    ),
+    _TabItem(
       label: 'Profile',
       icon: Icons.person_outline_rounded,
       activeIcon: Icons.person_rounded,
@@ -111,7 +116,6 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Active underline indicator
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             height: 3,
@@ -127,7 +131,7 @@ class _NavItem extends StatelessWidget {
           Text(
             tab.label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               color: color,
             ),
