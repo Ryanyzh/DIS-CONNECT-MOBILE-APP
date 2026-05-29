@@ -173,6 +173,15 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   _DatesCard(detail: detail),
                   const SizedBox(height: 20),
 
+                  // ── Description ────────────────────────────────────────────
+                  if (detail.description != null &&
+                      detail.description!.isNotEmpty) ...[
+                    const _SectionLabel(label: 'DESCRIPTION'),
+                    const SizedBox(height: 8),
+                    _DescriptionCard(text: detail.description!),
+                    const SizedBox(height: 20),
+                  ],
+
                   // ── Attachments ────────────────────────────────────────────
                   if (detail.attachments.isNotEmpty) ...[
                     const _SectionLabel(label: 'ATTACHMENTS'),
@@ -705,6 +714,33 @@ class _AttachmentsCard extends StatelessWidget {
   }
 }
 
+// Description card showing ticket description text
+class _DescriptionCard extends StatelessWidget {
+  final String text;
+  const _DescriptionCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.bodySm.copyWith(
+          color: AppColors.body,
+          height: 1.65,
+        ),
+      ),
+    );
+  }
+}
+
+// Attachments card showing list of attached files with download option
 class _AttachmentRow extends StatelessWidget {
   final AttachmentFile file;
   const _AttachmentRow({required this.file});
