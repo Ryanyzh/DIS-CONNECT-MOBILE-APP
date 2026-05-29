@@ -6,6 +6,12 @@ import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.d
 // Data models
 // ─────────────────────────────────────────────────────────────────────────────
 
+class AttachmentFile {
+  final String name;
+  final int sizeKb;
+  const AttachmentFile({required this.name, required this.sizeKb});
+}
+
 class TicketTask {
   final String title;
   final DateTime dueDate;
@@ -239,6 +245,50 @@ class _OfficerCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentRow extends StatelessWidget {
+  final AttachmentFile file;
+  const _AttachmentRow({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseSm),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.picture_as_pdf_outlined,
+            color: Color(0xFFEF4444),
+            size: 28,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  file.name,
+                  style: AppTypography.bodySm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                  ),
+                ),
+                Text('${file.sizeKb} KB', style: AppTypography.caption),
+              ],
+            ),
+          ),
+          const Icon(Icons.download_outlined, color: AppColors.body, size: 20),
         ],
       ),
     );
