@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
 
@@ -159,8 +161,14 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   _OfficerCard(detail: detail),
                   const SizedBox(height: 20),
 
+                  // ── Escalation (conditional) ───────────────────────────────
+                  if (detail.isEscalated) ...[
+                    _EscalationCard(detail: detail),
+                    const SizedBox(height: 20),
+                  ],
+
                   // ── Attachments ────────────────────────────────────────────
-                  if (d.attachments.isNotEmpty) ...[
+                  if (detail.attachments.isNotEmpty) ...[
                     const _SectionLabel(label: 'ATTACHMENTS'),
                     const SizedBox(height: 8),
                     _AttachmentsCard(files: detail.attachments),
@@ -325,9 +333,8 @@ class _MetaChip extends StatelessWidget {
 
 // Status card with current stage and status badge
 class _StatusCard extends StatelessWidget {
-  final String stage;
-  final String status;
-  const _StatusCard({required this.stage, required this.status});
+  final TicketDetailData detail;
+  const _StatusCard({required this.detail});
 
   @override
   Widget build(BuildContext context) {
@@ -341,14 +348,42 @@ class _StatusCard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            stage,
-            style: AppTypography.bodySm.copyWith(
-              color: AppColors.body,
-              fontWeight: FontWeight.w500,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TicketStatusBadge(status: detail.statusName, fontSize: 13),
+              if (detail.statusType != null) ...[
+                const SizedBox(height: 4),
+                Text(detail.statusType!, style: AppTypography.caption),
+              ],
+            ],
           ),
-          TicketStatusBadge(status: status, fontSize: 12),
+          if (detail.isClosed)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(9999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    size: 12,
+                    color: Color(0xFF64748B),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Closed',
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -356,17 +391,12 @@ class _StatusCard extends StatelessWidget {
 }
 
 class _OfficerCard extends StatelessWidget {
-  final String name;
-  final String role;
-  final String initials;
-  const _OfficerCard({
-    required this.name,
-    required this.role,
-    required this.initials,
-  });
+  final TicketDetailData detail;
+  const _OfficerCard({required this.detail});
 
   @override
   Widget build(BuildContext context) {
+    final hasOfficer = detail.officerName != null;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -379,38 +409,148 @@ class _OfficerCard extends StatelessWidget {
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE0E7FF),
+            decoration: BoxDecoration(
+              color: hasOfficer
+                  ? const Color(0xFFE0E7FF)
+                  : const Color(0xFFF1F5F9),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Text(
-              initials,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF4338CA),
-              ),
-            ),
+            child: hasOfficer
+                ? Text(
+                    detail.officerInitials ?? '?',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF4338CA),
+                    ),
+                  )
+                : const Icon(
+                    Icons.person_outline,
+                    color: Color(0xFF94A3B8),
+                    size: 22,
+                  ),
           ),
           const SizedBox(width: 12),
+          Expanded(
+            child: hasOfficer
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        detail.officerName!,
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      if (detail.officerRole != null) ...[
+                        const SizedBox(height: 2),
+                        Text(detail.officerRole!, style: AppTypography.caption),
+                      ],
+                    ],
+                  )
+                : Text(
+                    'Pending assignment',
+                    style: AppTypography.bodySm.copyWith(
+                      color: AppColors.mute,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Escalation card showing escalation status and details
+class _EscalationCard extends StatelessWidget {
+  final TicketDetailData detail;
+  const _EscalationCard({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFEA580C),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  'Ticket Escalated',
                   style: AppTypography.bodySm.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.ink,
+                    color: const Color(0xFFEA580C),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(role, style: AppTypography.caption),
+                if (detail.escalatedToName != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Escalated to ${detail.escalatedToName}',
+                    style: AppTypography.caption.copyWith(
+                      color: const Color(0xFFC2410C),
+                    ),
+                  ),
+                ],
+                if (detail.escalatedAt != null)
+                  Text(
+                    'on ${DateFormat('d MMM yyyy').format(detail.escalatedAt!)}',
+                    style: AppTypography.caption.copyWith(
+                      color: const Color(0xFFC2410C),
+                    ),
+                  ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Attachment card for each file
+class _AttachmentsCard extends StatelessWidget {
+  final List<AttachmentFile> files;
+  const _AttachmentsCard({required this.files});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: files.asMap().entries.map((e) {
+          final isLast = e.key == files.length - 1;
+          return Column(
+            children: [
+              _AttachmentRow(file: e.value),
+              if (!isLast)
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFF1F5F9),
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -422,20 +562,14 @@ class _AttachmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(AppBorderRadius.wiseSm),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
           const Icon(
             Icons.picture_as_pdf_outlined,
             color: Color(0xFFEF4444),
-            size: 28,
+            size: 26,
           ),
           const SizedBox(width: 10),
           Expanded(
