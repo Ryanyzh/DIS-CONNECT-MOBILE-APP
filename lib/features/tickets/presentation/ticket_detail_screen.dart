@@ -167,6 +167,12 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                     const SizedBox(height: 20),
                   ],
 
+                  // ── Timeline ───────────────────────────────────────────────
+                  const _SectionLabel(label: 'TIMELINE'),
+                  const SizedBox(height: 8),
+                  _DatesCard(detail: detail),
+                  const SizedBox(height: 20),
+
                   // ── Attachments ────────────────────────────────────────────
                   if (detail.attachments.isNotEmpty) ...[
                     const _SectionLabel(label: 'ATTACHMENTS'),
@@ -518,6 +524,149 @@ class _EscalationCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Dates card showing timeline of ticket events
+class _DateRow {
+  final IconData icon;
+  final String label;
+  final DateTime date;
+  final Color color;
+  final bool flagOverdue;
+  const _DateRow({
+    required this.icon,
+    required this.label,
+    required this.date,
+    required this.color,
+    this.flagOverdue = false,
+  });
+}
+
+class _DatesCard extends StatelessWidget {
+  final TicketDetailData detail;
+  const _DatesCard({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final overdue =
+        detail.dueAt != null &&
+        detail.dueAt!.isBefore(now) &&
+        detail.resolvedAt == null &&
+        detail.closedAt == null;
+
+    final rows = <_DateRow>[
+      _DateRow(
+        icon: Icons.schedule_outlined,
+        label: 'Submitted',
+        date: detail.createdAt,
+        color: AppColors.body,
+      ),
+      if (detail.dueAt != null)
+        _DateRow(
+          icon: Icons.event_outlined,
+          label: 'Due',
+          date: detail.dueAt!,
+          color: overdue ? const Color(0xFFEF4444) : AppColors.body,
+          flagOverdue: overdue,
+        ),
+      if (detail.updatedAt.isAfter(detail.createdAt))
+        _DateRow(
+          icon: Icons.update_outlined,
+          label: 'Last Updated',
+          date: detail.updatedAt,
+          color: AppColors.body,
+        ),
+      if (detail.resolvedAt != null)
+        _DateRow(
+          icon: Icons.check_circle_outline,
+          label: 'Resolved',
+          date: detail.resolvedAt!,
+          color: const Color(0xFF059669),
+        ),
+      if (detail.closedAt != null)
+        _DateRow(
+          icon: Icons.lock_outline,
+          label: 'Closed',
+          date: detail.closedAt!,
+          color: AppColors.mute,
+        ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: rows.asMap().entries.map((e) {
+          final row = e.value;
+          final isLast = e.key == rows.length - 1;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(row.icon, size: 15, color: row.color),
+                    const SizedBox(width: 10),
+                    Text(
+                      row.label,
+                      style: AppTypography.bodySm.copyWith(
+                        color: AppColors.mute,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (row.flagOverdue) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                        child: const Text(
+                          'Overdue',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFEF4444),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      DateFormat('d MMM yyyy').format(row.date),
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: row.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isLast)
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFF1F5F9),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
