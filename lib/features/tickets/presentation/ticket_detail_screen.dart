@@ -136,7 +136,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      appBar: _buildAppBar(context),
+      appBar: _buildAppBar(context, detail.ticketCode),
       body: Column(
         children: [
           Expanded(
@@ -197,7 +197,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(BuildContext context, String ticketCode) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -208,7 +208,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(
-        _detail.ticketCode,
+        ticketCode,
         style: AppTypography.bodyMd.copyWith(
           fontWeight: FontWeight.w800,
           color: AppColors.ink,
@@ -218,8 +218,18 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.settings_outlined, color: AppColors.ink),
-          onPressed: () {},
+          tooltip: 'Conversation',
+          icon: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            color: AppColors.ink,
+          ),
+          onPressed: () =>
+              context.push('/tickets/${widget.ticketId}/conversation'),
+        ),
+        IconButton(
+          tooltip: 'History',
+          icon: const Icon(Icons.history_rounded, color: AppColors.ink),
+          onPressed: () => context.push('/tickets/${widget.ticketId}/history'),
         ),
       ],
     );
