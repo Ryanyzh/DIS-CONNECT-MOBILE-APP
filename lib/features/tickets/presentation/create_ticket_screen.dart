@@ -21,6 +21,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   // ── Step 1 state ─────────────────────────────────────────────────────────
   final _subjectController = TextEditingController();
+  static const int _maxSubjectChars = 200;
 
   // ── Step 2 state ─────────────────────────────────────────────────────────
   final _descController = TextEditingController();
@@ -165,6 +166,16 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             icon: Icons.info_outline_rounded,
             text:
                 'Start by classifying your request so we can route it to the right team.',
+          ),
+          const SizedBox(height: 24),
+
+          // ── Subject ─────────────────────────────────────────────────────
+          const _FieldLabel(label: 'Subject', required: true),
+          const SizedBox(height: 8),
+          _SubjectField(
+            controller: _subjectController,
+            maxChars: _maxSubjectChars,
+            onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 24),
         ],
@@ -463,16 +474,91 @@ class _StepHint extends StatelessWidget {
   }
 }
 
+class _FieldLabel extends StatelessWidget {
+  final String label;
+  final bool required;
+  const _FieldLabel({required this.label, this.required = false});
 
-
-
-
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodySm.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
+        if (required)
+          const Text(
+            ' *',
+            style: TextStyle(
+              color: Color(0xFFEF4444),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 1 widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+class _SubjectField extends StatelessWidget {
+  final TextEditingController controller;
+  final int maxChars;
+  final ValueChanged<String> onChanged;
+  const _SubjectField({
+    required this.controller,
+    required this.maxChars,
+    required this.onChanged,
+  });
 
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: 1,
+            maxLength: maxChars,
+            buildCounter:
+                (_, {required currentLength, required isFocused, maxLength}) =>
+                    const SizedBox.shrink(),
+            onChanged: onChanged,
+            style: AppTypography.bodySm.copyWith(color: AppColors.ink),
+            decoration: InputDecoration(
+              hintText: 'Brief summary of your request...',
+              hintStyle: AppTypography.bodySm.copyWith(
+                color: const Color(0xFFADB5BD),
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${controller.text.length}/$maxChars',
+          style: AppTypography.caption.copyWith(fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
 
 
 
