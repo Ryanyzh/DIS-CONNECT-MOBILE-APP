@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   // ── Step 3 state ─────────────────────────────────────────────────────────
 
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +41,41 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     _subjectController.dispose();
     _descController.dispose();
     super.dispose();
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+
+  void _goNext() {
+    if (_currentStep < _totalSteps - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
+      setState(() => _currentStep++);
+    } else {
+      _submit();
+    }
+  }
+
+  void _goBack() {
+    if (_currentStep > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
+      setState(() => _currentStep--);
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  Future<void> _submit() async {
+    setState(() => _isSubmitting = true);
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      context.go('/tickets');
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -62,6 +100,15 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [_buildStep1(), _buildStep2(), _buildStep3()],
             ),
+          ),
+
+          // ── Bottom navigation ───────────────────────────────────────────
+          _BottomNav(
+            currentStep: _currentStep,
+            totalSteps: _totalSteps,
+            isSubmitting: _isSubmitting,
+            onBack: _goBack,
+            onNext: _goNext,
           ),
         ],
       ),
@@ -244,6 +291,121 @@ class _StepIndicator extends StatelessWidget {
             ],
           );
         }),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bottom navigation
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BottomNav extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
+  final bool isSubmitting;
+  final VoidCallback onBack;
+  final VoidCallback onNext;
+  const _BottomNav({
+    required this.currentStep,
+    required this.totalSteps,
+    required this.isSubmitting,
+    required this.onBack,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isLast = currentStep == totalSteps - 1;
+    final safeBottom = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + safeBottom),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Colors.black.withValues(alpha: 0.07)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Back button (ghost)
+          if (currentStep > 0) ...[
+            Expanded(
+              child: SizedBox(
+                height: 54,
+                child: OutlinedButton(
+                  onPressed: isSubmitting ? null : onBack,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppBorderRadius.wiseLg,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Back',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.body,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+
+          // Next / Submit button
+          Expanded(
+            flex: currentStep == 0 ? 1 : 2,
+            child: SizedBox(
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: isSubmitting ? null : onNext,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3730A3),
+                  disabledBackgroundColor: const Color(
+                    0xFF3730A3,
+                  ).withValues(alpha: 0.6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppBorderRadius.wiseLg),
+                  ),
+                ),
+                icon: isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(
+                        isLast
+                            ? Icons.send_rounded
+                            : Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                label: Text(
+                  isSubmitting
+                      ? 'Submitting...'
+                      : isLast
+                      ? 'Submit Ticket'
+                      : 'Continue',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
