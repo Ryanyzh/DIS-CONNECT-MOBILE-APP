@@ -20,6 +20,20 @@ class _Category {
   const _Category(this.label, this.icon);
 }
 
+const _priorities = [
+  _Priority('Low', Icons.arrow_downward_rounded, Color(0xFF22C55E)),
+  _Priority('Medium', Icons.remove_rounded, Color(0xFFF59E0B)),
+  _Priority('High', Icons.arrow_upward_rounded, Color(0xFFEF4444)),
+  _Priority('Critical', Icons.priority_high_rounded, Color(0xFF7C3AED)),
+];
+
+class _Priority {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _Priority(this.label, this.icon, this.color);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +55,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final _subjectController = TextEditingController();
   static const int _maxSubjectChars = 200;
   _Category? _selectedCategory;
+  _Priority? _selectedPriority;
 
   // ── Step 2 state ─────────────────────────────────────────────────────────
   final _descController = TextEditingController();
@@ -96,6 +111,26 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       setState(() => _isSubmitting = false);
       context.go('/tickets');
     }
+  }
+
+  // ── Category sheet ────────────────────────────────────────────────────────
+
+  void _showCategorySheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppBorderRadius.wiseXl),
+        ),
+      ),
+      builder: (_) => _CategorySheet(
+        selected: _selectedCategory,
+        onSelect: (c) {
+          setState(() => _selectedCategory = c);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -206,6 +241,19 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             onTap: _showCategorySheet,
           ),
           const SizedBox(height: 24),
+
+          // ── Priority ────────────────────────────────────────────────────
+          const _FieldLabel(label: 'Priority'),
+          const SizedBox(height: 4),
+          Text(
+            'How urgently do you need this resolved?',
+            style: AppTypography.caption.copyWith(color: AppColors.mute),
+          ),
+          const SizedBox(height: 10),
+          _PrioritySelector(
+            selected: _selectedPriority,
+            onSelect: (p) => setState(() => _selectedPriority = p),
+          ),
         ],
       ),
     );
@@ -643,11 +691,108 @@ class _CategoryDropdown extends StatelessWidget {
   }
 }
 
+class _CategorySheet extends StatelessWidget {
+  final _Category? selected;
+  final ValueChanged<_Category> onSelect;
+  const _CategorySheet({required this.selected, required this.onSelect});
 
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select Category',
+            style: AppTypography.bodyMd.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ..._categories.map(
+            (c) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEDE9FE),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(c.icon, color: const Color(0xFF7C3AED), size: 18),
+              ),
+              title: Text(
+                c.label,
+                style: AppTypography.bodySm.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
+              trailing: selected?.label == c.label
+                  ? const Icon(Icons.check, color: Color(0xFF4338CA), size: 18)
+                  : null,
+              onTap: () => onSelect(c),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
+class _PrioritySelector extends StatelessWidget {
+  final _Priority? selected;
+  final ValueChanged<_Priority> onSelect;
+  const _PrioritySelector({required this.selected, required this.onSelect});
 
-
-
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: _priorities.map((p) {
+        final isSelected = selected?.label == p.label;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: p == _priorities.last ? 0 : 8),
+            child: GestureDetector(
+              onTap: () => onSelect(p),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? p.color.withValues(alpha: 0.1)
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+                  border: Border.all(
+                    color: isSelected ? p.color : const Color(0xFFE2E8F0),
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(p.icon, color: p.color, size: 18),
+                    const SizedBox(height: 4),
+                    Text(
+                      p.label,
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? p.color : AppColors.body,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
 
 
 // ─────────────────────────────────────────────────────────────────────────────
