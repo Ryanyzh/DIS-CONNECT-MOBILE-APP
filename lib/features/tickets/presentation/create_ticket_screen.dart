@@ -160,6 +160,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // TODO: if user has a profile, show their name/email and pre-fill contact info fields
+          // ── Section hint ────────────────────────────────────────────────
+          _StepHint(
+            icon: Icons.info_outline_rounded,
+            text:
+                'Start by classifying your request so we can route it to the right team.',
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -172,6 +179,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // TODO: category dropdown, priority selector, subject field
+          // ── Section hint ────────────────────────────────────────────────
+          _StepHint(
+            icon: Icons.edit_note_rounded,
+            text:
+                'Describe your request clearly. Include any relevant context or reference numbers.',
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -410,3 +424,75 @@ class _BottomNav extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared field widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StepHint extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _StepHint({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFDDD6FE)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF7C3AED)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTypography.caption.copyWith(
+                color: const Color(0xFF5B21B6),
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 1 widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 2 widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step 3 widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+
