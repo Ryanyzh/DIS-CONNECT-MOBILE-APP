@@ -3,6 +3,24 @@ import 'package:go_router/go_router.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Swap data with database when backend is ready
+// ─────────────────────────────────────────────────────────────────────────────
+const _categories = [
+  _Category('Reimbursement', Icons.receipt_long_outlined),
+  _Category('Internship', Icons.work_outline),
+  _Category('Scholarship', Icons.school_outlined),
+  _Category('Leave', Icons.calendar_today_outlined),
+  _Category('Exchange', Icons.flight_outlined),
+  _Category('Policy', Icons.policy_outlined),
+];
+
+class _Category {
+  final String label;
+  final IconData icon;
+  const _Category(this.label, this.icon);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -22,6 +40,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   // ── Step 1 state ─────────────────────────────────────────────────────────
   final _subjectController = TextEditingController();
   static const int _maxSubjectChars = 200;
+  _Category? _selectedCategory;
 
   // ── Step 2 state ─────────────────────────────────────────────────────────
   final _descController = TextEditingController();
@@ -176,6 +195,15 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             controller: _subjectController,
             maxChars: _maxSubjectChars,
             onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Category ────────────────────────────────────────────────────
+          const _FieldLabel(label: 'Category', required: true),
+          const SizedBox(height: 8),
+          _CategoryDropdown(
+            selected: _selectedCategory,
+            onTap: _showCategorySheet,
           ),
           const SizedBox(height: 24),
         ],
@@ -559,6 +587,63 @@ class _SubjectField extends StatelessWidget {
     );
   }
 }
+
+class _CategoryDropdown extends StatelessWidget {
+  final _Category? selected;
+  final VoidCallback onTap;
+  const _CategoryDropdown({required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEDE9FE),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                selected?.icon ?? Icons.category_outlined,
+                color: const Color(0xFF7C3AED),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                selected?.label ?? 'Select category',
+                style: AppTypography.bodySm.copyWith(
+                  color: selected != null
+                      ? AppColors.ink
+                      : const Color(0xFFADB5BD),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: AppColors.mute,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
 
 
 
