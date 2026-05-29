@@ -59,6 +59,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   // ── Step 2 state ─────────────────────────────────────────────────────────
   final _descController = TextEditingController();
+  static const int _maxDescChars = 1000;
 
   // ── Step 3 state ─────────────────────────────────────────────────────────
 
@@ -273,6 +274,16 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                 'Describe your request clearly. Include any relevant context or reference numbers.',
           ),
           const SizedBox(height: 24),
+
+          // ── Description ──────────────────────────────────────────────────
+          const _FieldLabel(label: 'Description', required: true),
+          const SizedBox(height: 8),
+          _DescriptionField(
+            controller: _descController,
+            maxChars: _maxDescChars,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 28),
         ],
       ),
     );
@@ -794,12 +805,62 @@ class _PrioritySelector extends StatelessWidget {
   }
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 2 widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+class _DescriptionField extends StatelessWidget {
+  final TextEditingController controller;
+  final int maxChars;
+  final ValueChanged<String> onChanged;
+  const _DescriptionField({
+    required this.controller,
+    required this.maxChars,
+    required this.onChanged,
+  });
 
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: 7,
+            maxLength: maxChars,
+            buildCounter:
+                (_, {required currentLength, required isFocused, maxLength}) =>
+                    const SizedBox.shrink(),
+            onChanged: onChanged,
+            style: AppTypography.bodySm.copyWith(color: AppColors.ink),
+            decoration: InputDecoration(
+              hintText:
+                  'Describe your request in detail — include any reference numbers, dates, or relevant context...',
+              hintStyle: AppTypography.bodySm.copyWith(
+                color: const Color(0xFFADB5BD),
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.fromLTRB(14, 44, 14, 14),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 10,
+          right: 12,
+          child: Text(
+            '${controller.text.length}/$maxChars',
+            style: AppTypography.caption.copyWith(fontSize: 11),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 
 
