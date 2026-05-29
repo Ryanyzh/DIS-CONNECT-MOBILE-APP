@@ -31,20 +31,58 @@ class TicketTask {
 }
 
 class TicketDetailData {
-  final String displayId;
-  final String status;
-  final String stage;
-  final String officerName;
-  final String officerRole;
-  final String officerInitials;
+  final String ticketCode;
+  final String subject;
+  final String category;
+  final String? priority;
+  final Color? priorityColor;
+  // Status (from TicketStatus table)
+  final String statusName;
+  final String? statusType;
+  final bool isClosed;
+  // Content
+  final String? description;
+  final String? source;
+  // Assigned officer (hr_profiles.assigned_to)
+  final String? officerName;
+  final String? officerRole;
+  final String? officerInitials;
+  // Escalation
+  final bool isEscalated;
+  final String? escalatedToName;
+  final DateTime? escalatedAt;
+  // Dates
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? dueAt;
+  final DateTime? resolvedAt;
+  final DateTime? closedAt;
+  // Attachments
+  final List<AttachmentFile> attachments;
 
   const TicketDetailData({
-    required this.displayId,
-    required this.status,
-    required this.stage,
-    required this.officerName,
-    required this.officerRole,
-    required this.officerInitials,
+    required this.ticketCode,
+    required this.subject,
+    required this.category,
+    this.priority,
+    this.priorityColor,
+    required this.statusName,
+    this.statusType,
+    this.isClosed = false,
+    this.description,
+    this.source,
+    this.officerName,
+    this.officerRole,
+    this.officerInitials,
+    this.isEscalated = false,
+    this.escalatedToName,
+    this.escalatedAt,
+    required this.createdAt,
+    required this.updatedAt,
+    this.dueAt,
+    this.resolvedAt,
+    this.closedAt,
+    this.attachments = const [],
   });
 }
 
@@ -61,18 +99,38 @@ class TicketDetailScreen extends StatefulWidget {
 }
 
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
-  // Sample detail — swap for repository lookup by widget.ticketId
-  late final TicketDetailData _detail = TicketDetailData(
-    displayId: 'REB-2024-0012',
-    status: 'In Review',
-    stage: 'Open',
+  // Sample detail — swap for repository lookup by ticketId
+  TicketDetailData get _detail => TicketDetailData(
+    ticketCode: 'REB-2024-0012',
+    subject: 'Reimbursement for Flight Ticket — Exchange Programme',
+    category: 'Reimbursement',
+    priority: 'High',
+    priorityColor: const Color(0xFFEF4444),
+    statusName: 'In Review',
+    statusType: 'Processing',
+    isClosed: false,
+    description:
+        'I am requesting reimbursement for my flight ticket purchased for '
+        'the NUS Global Exchange Programme. The flight was on 12 Sep 2024 '
+        'from Singapore to Frankfurt. Please find attached the invoice and '
+        'boarding pass for your reference.',
+    source: 'Mobile App',
     officerName: 'Eileen (Scholarship Admin)',
     officerRole: 'Scholarship Administration',
     officerInitials: 'EA',
+    isEscalated: false,
+    createdAt: DateTime(2024, 9, 10, 9, 0),
+    updatedAt: DateTime(2024, 9, 10, 11, 5),
+    dueAt: DateTime(2024, 9, 24),
+    attachments: const [
+      AttachmentFile(name: 'flight_ticket.pdf', sizeKb: 245),
+      AttachmentFile(name: 'invoice.pdf', sizeKb: 130),
+    ],
   );
 
   @override
   Widget build(BuildContext context) {
+    final detail = _detail;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
@@ -85,20 +143,28 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Status ──────────────────────────────────────────────
-                  _SectionLabel(label: 'Status'),
-                  const SizedBox(height: 10),
-                  _StatusCard(stage: _detail.stage, status: _detail.status),
-                  const SizedBox(height: 24),
+                  // ── Subject + meta ─────────────────────────────────────────
+                  _SubjectCard(detail: detail),
+                  const SizedBox(height: 20),
 
-                  // ── HR Officer ───────────────────────────────────────────
-                  _SectionLabel(label: 'HR Officer'),
-                  const SizedBox(height: 10),
-                  _OfficerCard(
-                    name: _detail.officerName,
-                    role: _detail.officerRole,
-                    initials: _detail.officerInitials,
-                  ),
+                  // ── Status ─────────────────────────────────────────────────
+                  const _SectionLabel(label: 'STATUS'),
+                  const SizedBox(height: 8),
+                  _StatusCard(detail: detail),
+                  const SizedBox(height: 20),
+
+                  // ── Assigned to ────────────────────────────────────────────
+                  const _SectionLabel(label: 'ASSIGNED TO'),
+                  const SizedBox(height: 8),
+                  _OfficerCard(detail: detail),
+                  const SizedBox(height: 20),
+
+                  // ── Attachments ────────────────────────────────────────────
+                  if (d.attachments.isNotEmpty) ...[
+                    const _SectionLabel(label: 'ATTACHMENTS'),
+                    const SizedBox(height: 8),
+                    _AttachmentsCard(files: detail.attachments),
+                  ],
                 ],
               ),
             ),
@@ -119,7 +185,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(
-        _detail.displayId,
+        _detail.ticketCode,
         style: AppTypography.bodyMd.copyWith(
           fontWeight: FontWeight.w800,
           color: AppColors.ink,
@@ -141,6 +207,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 // Sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Title card
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
@@ -159,6 +226,104 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
+// subject card with category and priority chips
+class _SubjectCard extends StatelessWidget {
+  final TicketDetailData detail;
+  const _SubjectCard({required this.detail});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            detail.subject,
+            style: AppTypography.bodyMd.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _MetaChip(
+                icon: Icons.category_outlined,
+                label: detail.category,
+                bg: const Color(0xFFEDE9FE),
+                color: const Color(0xFF7C3AED),
+              ),
+              if (detail.priority != null)
+                _MetaChip(
+                  icon: Icons.flag_outlined,
+                  label: detail.priority!,
+                  bg: detail.priorityColor!.withValues(alpha: 0.1),
+                  color: detail.priorityColor!,
+                ),
+              if (detail.source != null)
+                _MetaChip(
+                  icon: Icons.devices_outlined,
+                  label: detail.source!,
+                  bg: const Color(0xFFF1F5F9),
+                  color: AppColors.body,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color bg;
+  final Color color;
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.bg,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(9999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Status card with current stage and status badge
 class _StatusCard extends StatelessWidget {
   final String stage;
   final String status;
