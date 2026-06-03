@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   // ── Step 2 state ─────────────────────────────────────────────────────────
   final _descController = TextEditingController();
   static const int _maxDescChars = 1000;
+  DateTime? _dueDate;
 
   // ── Step 3 state ─────────────────────────────────────────────────────────
 
@@ -132,6 +134,30 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         },
       ),
     );
+  }
+
+  // ── Date picker ───────────────────────────────────────────────────────────
+
+  Future<void> _pickDueDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? now.add(const Duration(days: 7)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF4338CA),
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Color(0xFF1E293B),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _dueDate = picked);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -215,7 +241,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TODO: if user has a profile, show their name/email and pre-fill contact info fields
           // ── Section hint ────────────────────────────────────────────────
           _StepHint(
             icon: Icons.info_outline_rounded,
@@ -284,6 +309,20 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 28),
+
+          // ── Requested Due Date ───────────────────────────────────────────
+          const _FieldLabel(label: 'Requested Due Date'),
+          const SizedBox(height: 4),
+          Text(
+            'Optional — let us know if you have a deadline.',
+            style: AppTypography.caption.copyWith(color: AppColors.mute),
+          ),
+          const SizedBox(height: 10),
+          _DueDatePicker(
+            selectedDate: _dueDate,
+            onTap: _pickDueDate,
+            onClear: () => setState(() => _dueDate = null),
+          ),
         ],
       ),
     );
@@ -831,7 +870,7 @@ class _DescriptionField extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
-            maxLines: 7,
+            maxLines: 9,
             maxLength: maxChars,
             buildCounter:
                 (_, {required currentLength, required isFocused, maxLength}) =>
@@ -845,7 +884,7 @@ class _DescriptionField extends StatelessWidget {
                 color: const Color(0xFFADB5BD),
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.fromLTRB(14, 44, 14, 14),
+              contentPadding: const EdgeInsets.fromLTRB(14, 32, 14, 14),
             ),
           ),
         ),
@@ -862,6 +901,92 @@ class _DescriptionField extends StatelessWidget {
   }
 }
 
+class _DueDatePicker extends StatelessWidget {
+  final DateTime? selectedDate;
+  final VoidCallback onTap;
+  final VoidCallback onClear;
+  const _DueDatePicker({
+    required this.selectedDate,
+    required this.onTap,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDate = selectedDate != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+          border: Border.all(
+            color: hasDate ? const Color(0xFF4338CA) : const Color(0xFFE2E8F0),
+            width: hasDate ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: hasDate
+                    ? const Color(0xFFE0E7FF)
+                    : const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.event_rounded,
+                color: hasDate ? const Color(0xFF4338CA) : AppColors.mute,
+                size: 17,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                hasDate
+                    ? DateFormat('EEEE, d MMMM yyyy').format(selectedDate!)
+                    : 'Select a date (optional)',
+                style: AppTypography.bodySm.copyWith(
+                  color: hasDate
+                      ? const Color(0xFF3730A3)
+                      : const Color(0xFFADB5BD),
+                  fontWeight: hasDate ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (hasDate)
+              GestureDetector(
+                onTap: onClear,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    size: 13,
+                    color: AppColors.body,
+                  ),
+                ),
+              )
+            else
+              const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.mute,
+                size: 22,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 
 
