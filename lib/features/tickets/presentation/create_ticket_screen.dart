@@ -368,6 +368,67 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             onAdd: _addAttachment,
           ),
           const SizedBox(height: 32),
+
+          // ── Review divider ───────────────────────────────────────────────
+          Row(
+            children: [
+              const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'REVIEW BEFORE SUBMITTING',
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    color: AppColors.mute,
+                  ),
+                ),
+              ),
+              const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Review card ──────────────────────────────────────────────────
+          _ReviewCard(
+            subject: _subjectController.text,
+            category: _selectedCategory,
+            priority: _selectedPriority,
+            description: _descController.text,
+            dueDate: _dueDate,
+            attachmentCount: _attachments.length,
+          ),
+          const SizedBox(height: 16),
+
+          // ── Auto-set fields note ─────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+              border: Border.all(color: const Color(0xFFBBF7D0)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Color(0xFF16A34A),
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Status will be set to Open and your ticket will be assigned shortly after submission.',
+                    style: AppTypography.caption.copyWith(
+                      color: const Color(0xFF15803D),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1152,6 +1213,148 @@ class _AttachmentsBox extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Review card ───────────────────────────────────────────────────────────────
+
+class _ReviewCard extends StatelessWidget {
+  final String subject;
+  final _Category? category;
+  final _Priority? priority;
+  final String description;
+  final DateTime? dueDate;
+  final int attachmentCount;
+
+  const _ReviewCard({
+    required this.subject,
+    required this.category,
+    required this.priority,
+    required this.description,
+    required this.dueDate,
+    required this.attachmentCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasSubject = subject.trim().isNotEmpty;
+    final hasDesc = description.trim().isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDE9FE),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                child: const Text(
+                  'DRAFT',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF7C3AED),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.visibility_outlined,
+                size: 14,
+                color: AppColors.mute,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Preview',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.mute,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Subject
+          Text(
+            hasSubject ? subject : 'No subject entered',
+            style: AppTypography.bodyMd.copyWith(
+              fontWeight: FontWeight.w700,
+              color: hasSubject ? AppColors.ink : AppColors.mute,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Description preview
+          if (hasDesc) ...[
+            const SizedBox(height: 12),
+            Text(
+              description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySm.copyWith(
+                color: AppColors.body,
+                height: 1.55,
+              ),
+            ),
+          ],
+
+          // Due date
+          if (dueDate != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(
+                  Icons.event_outlined,
+                  size: 14,
+                  color: Color(0xFF4338CA),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Due ${DateFormat('d MMM yyyy').format(dueDate!)}',
+                  style: AppTypography.caption.copyWith(
+                    color: const Color(0xFF4338CA),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Attachments
+          if (attachmentCount > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(
+                  Icons.attach_file_rounded,
+                  size: 14,
+                  color: AppColors.mute,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '$attachmentCount attachment${attachmentCount > 1 ? 's' : ''}',
+                  style: AppTypography.caption,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
