@@ -90,6 +90,29 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   // ── Validation ────────────────────────────────────────────────────────────
 
+  bool _validateCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        if (_subjectController.text.trim().isEmpty) {
+          _snack('Please enter a subject');
+          return false;
+        }
+        if (_selectedCategory == null) {
+          _snack('Please select a category');
+          return false;
+        }
+        return true;
+      case 1:
+        if (_descController.text.trim().isEmpty) {
+          _snack('Please add a description');
+          return false;
+        }
+        return true;
+      default:
+        return true; // attachments optional
+    }
+  }
+
   void _snack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -97,6 +120,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   // ── Navigation ────────────────────────────────────────────────────────────
 
   void _goNext() {
+    if (!_validateCurrentStep()) return;
     if (_currentStep < _totalSteps - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 380),
