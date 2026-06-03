@@ -1301,6 +1301,35 @@ class _ReviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
+          // Category + Priority chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              if (category != null)
+                _ReviewChip(
+                  icon: category!.icon,
+                  label: category!.label,
+                  bg: const Color(0xFFEDE9FE),
+                  color: const Color(0xFF7C3AED),
+                )
+              else
+                _ReviewChip(
+                  icon: Icons.category_outlined,
+                  label: 'No category',
+                  bg: const Color(0xFFF1F5F9),
+                  color: AppColors.mute,
+                ),
+              if (priority != null)
+                _ReviewChip(
+                  icon: priority!.icon,
+                  label: priority!.label,
+                  bg: priority!.color.withValues(alpha: 0.1),
+                  color: priority!.color,
+                ),
+            ],
+          ),
+
           // Description preview
           if (hasDesc) ...[
             const SizedBox(height: 12),
@@ -1355,6 +1384,45 @@ class _ReviewCard extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color bg;
+  final Color color;
+  const _ReviewChip({
+    required this.icon,
+    required this.label,
+    required this.bg,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(9999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
