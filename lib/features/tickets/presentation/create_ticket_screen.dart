@@ -1055,7 +1055,50 @@ class _AttachmentsBox extends StatelessWidget {
                     horizontal: 14,
                     vertical: 12,
                   ),
-                  // TODO: Add attachment preview (e.g. file type icon, filename, size)
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.picture_as_pdf_outlined,
+                        color: Color(0xFFEF4444),
+                        size: 26,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              f.name,
+                              style: AppTypography.bodySm.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                            Text(
+                              '${f.sizeKb} KB',
+                              style: AppTypography.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => onRemove(i),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            size: 14,
+                            color: AppColors.body,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const Divider(
                   height: 1,
