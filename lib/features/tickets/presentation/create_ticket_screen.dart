@@ -35,6 +35,12 @@ class _Priority {
   const _Priority(this.label, this.icon, this.color);
 }
 
+class _AttachedFile {
+  final String name;
+  final int sizeKb;
+  const _AttachedFile({required this.name, required this.sizeKb});
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,6 +70,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   DateTime? _dueDate;
 
   // ── Step 3 state ─────────────────────────────────────────────────────────
+  final List<_AttachedFile> _attachments = [];
 
   bool _isSubmitting = false;
 
@@ -79,6 +86,12 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     _subjectController.dispose();
     _descController.dispose();
     super.dispose();
+  }
+
+  // ── Validation ────────────────────────────────────────────────────────────
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -158,6 +171,12 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       ),
     );
     if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  // ── Attachment ────────────────────────────────────────────────────────────
+
+  void _addAttachment() {
+    _snack('File picker coming soon');
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -335,6 +354,20 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // TODO: description field, due date picker, file attachments, submit button
+          // ── Attachments ──────────────────────────────────────────────────
+          const _FieldLabel(label: 'Attachments'),
+          const SizedBox(height: 4),
+          Text(
+            'Upload any supporting documents (max 5 files, 10 MB each).',
+            style: AppTypography.caption.copyWith(color: AppColors.mute),
+          ),
+          const SizedBox(height: 10),
+          _AttachmentsBox(
+            files: _attachments,
+            onRemove: (i) => setState(() => _attachments.removeAt(i)),
+            onAdd: _addAttachment,
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -988,13 +1021,96 @@ class _DueDatePicker extends StatelessWidget {
   }
 }
 
-
-
-
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 3 widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+class _AttachmentsBox extends StatelessWidget {
+  final List<_AttachedFile> files;
+  final ValueChanged<int> onRemove;
+  final VoidCallback onAdd;
+  const _AttachmentsBox({
+    required this.files,
+    required this.onRemove,
+    required this.onAdd,
+  });
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          ...files.asMap().entries.map((e) {
+            final i = e.key;
+            final f = e.value;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  // TODO: Add attachment preview (e.g. file type icon, filename, size)
+                ),
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFF1F5F9),
+                ),
+              ],
+            );
+          }),
+          if (files.length < 5)
+            GestureDetector(
+              onTap: onAdd,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEDE9FE),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.attach_file_rounded,
+                        color: Color(0xFF7C3AED),
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Add attachment',
+                          style: AppTypography.bodySm.copyWith(
+                            color: AppColors.body,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          'Max 5 files · up to 10 MB each',
+                          style: AppTypography.caption,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
