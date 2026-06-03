@@ -323,6 +323,21 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             selected: _selectedPriority,
             onSelect: (p) => setState(() => _selectedPriority = p),
           ),
+          const SizedBox(height: 14),
+
+          // ── Requested Due Date ───────────────────────────────────────────
+          const _FieldLabel(label: 'Requested Due Date'),
+          const SizedBox(height: 4),
+          Text(
+            'Optional — let us know if you have a deadline.',
+            style: AppTypography.caption.copyWith(color: AppColors.mute),
+          ),
+          const SizedBox(height: 10),
+          _DueDatePicker(
+            selectedDate: _dueDate,
+            onTap: _pickDueDate,
+            onClear: () => setState(() => _dueDate = null),
+          ),
         ],
       ),
     );
@@ -353,31 +368,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── Requested Due Date ───────────────────────────────────────────
-          const _FieldLabel(label: 'Requested Due Date'),
-          const SizedBox(height: 4),
-          Text(
-            'Optional — let us know if you have a deadline.',
-            style: AppTypography.caption.copyWith(color: AppColors.mute),
-          ),
-          const SizedBox(height: 10),
-          _DueDatePicker(
-            selectedDate: _dueDate,
-            onTap: _pickDueDate,
-            onClear: () => setState(() => _dueDate = null),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep3() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // TODO: description field, due date picker, file attachments, submit button
           // ── Attachments ──────────────────────────────────────────────────
           const _FieldLabel(label: 'Attachments'),
           const SizedBox(height: 4),
@@ -392,7 +382,17 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             onAdd: _addAttachment,
           ),
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildStep3() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           // ── Review divider ───────────────────────────────────────────────
           Row(
             children: [
