@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,6 +25,54 @@ class _HistoryEntry {
     required this.iconBg,
   });
 }
+
+final _stubHistory = [
+  _HistoryEntry(
+    action: 'Ticket Created',
+    detail: 'Submitted via Mobile App',
+    actorName: 'You',
+    timestamp: DateTime(2024, 9, 10, 9, 0),
+    icon: Icons.add_circle_outline_rounded,
+    iconColor: Color(0xFF7C3AED),
+    iconBg: Color(0xFFEDE9FE),
+  ),
+  _HistoryEntry(
+    action: 'Status Changed',
+    detail: 'Open → In Review',
+    actorName: 'Eileen (Scholarship Admin)',
+    timestamp: DateTime(2024, 9, 10, 10, 15),
+    icon: Icons.swap_horiz_rounded,
+    iconColor: Color(0xFF2563EB),
+    iconBg: Color(0xFFDBEAFE),
+  ),
+  _HistoryEntry(
+    action: 'Ticket Assigned',
+    detail: 'Assigned to Eileen (Scholarship Admin)',
+    actorName: 'System',
+    timestamp: DateTime(2024, 9, 10, 10, 15),
+    icon: Icons.person_add_outlined,
+    iconColor: Color(0xFF059669),
+    iconBg: Color(0xFFD1FAE5),
+  ),
+  _HistoryEntry(
+    action: 'Comment Added',
+    detail: 'Requested supporting documents',
+    actorName: 'Eileen (Scholarship Admin)',
+    timestamp: DateTime(2024, 9, 10, 10, 30),
+    icon: Icons.chat_bubble_outline_rounded,
+    iconColor: Color(0xFF6366F1),
+    iconBg: Color(0xFFE0E7FF),
+  ),
+  _HistoryEntry(
+    action: 'Attachment Added',
+    detail: 'flight_ticket.pdf, invoice.pdf',
+    actorName: 'You',
+    timestamp: DateTime(2024, 9, 10, 11, 5),
+    icon: Icons.attach_file_rounded,
+    iconColor: Color(0xFFEA580C),
+    iconBg: Color(0xFFFFEDD5),
+  ),
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
@@ -58,6 +107,11 @@ class TicketHistoryScreen extends StatelessWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        itemCount: _stubHistory.length,
+        itemBuilder: (_, i) => _HistoryTile(
+          entry: _stubHistory[i],
+          isLast: i == _stubHistory.length - 1,
+        ),
       ),
     );
   }
@@ -107,6 +161,64 @@ class _HistoryTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+
+          // ── Content ──────────────────────────────────────────────────
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  Text(
+                    entry.action,
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  if (entry.detail != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      entry.detail!,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.body,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 11,
+                        color: AppColors.mute,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(entry.actorName, style: AppTypography.caption),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.schedule_outlined,
+                        size: 11,
+                        color: AppColors.mute,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        DateFormat(
+                          'd MMM yyyy, h:mm a',
+                        ).format(entry.timestamp),
+                        style: AppTypography.caption,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
