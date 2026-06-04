@@ -6,6 +6,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/tickets/presentation/ticket_list_screen.dart';
 import '../features/tickets/presentation/create_ticket_screen.dart';
 import '../features/tickets/presentation/ticket_detail_screen.dart';
+import '../features/tickets/presentation/ticket_history_screen.dart';
 import '../features/tickets/presentation/ticket_conversation_screen.dart';
 import '../features/announcements/presentation/announcements_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
@@ -63,6 +64,12 @@ final appRouter = GoRouter(
                     GoRoute(
                       path: 'conversation',
                       builder: (context, state) => TicketConversationScreen(
+                        ticketId: state.pathParameters['id']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'history',
+                      builder: (context, state) => TicketHistoryScreen(
                         ticketId: state.pathParameters['id']!,
                       ),
                     ),
