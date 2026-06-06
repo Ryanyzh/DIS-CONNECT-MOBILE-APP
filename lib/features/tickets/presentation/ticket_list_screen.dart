@@ -6,6 +6,7 @@ import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
+import 'package:disconnect_mobile/features/tickets/widgets/search_bar.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,6 +21,18 @@ class TicketListScreen extends StatefulWidget {
 class _TicketListScreenState extends State<TicketListScreen> {
   List<Ticket> _tickets = [];
   bool _loading = true;
+  String _query = '';
+
+  List<Ticket> get _visible {
+    if (_query.isEmpty) return _tickets;
+    final q = _query.toLowerCase();
+    return _tickets.where((t) =>
+      t.title.toLowerCase().contains(q) ||
+      t.displayId.toLowerCase().contains(q) ||
+      t.category.toLowerCase().contains(q) ||
+      t.status.toLowerCase().contains(q),
+    ).toList();
+  }
 
   @override
   void initState() {
@@ -67,7 +80,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: const SearchBar(),
+                child: AppSearchBar(
+                  onChanged: (q) => setState(() => _query = q),
+                ),
               ),
             ),
 
@@ -76,9 +91,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (_tickets.isEmpty)
+            else if (_visible.isEmpty)
               const SliverFillRemaining(
-                child: Center(child: Text('No tickets yet')),
+                child: Center(child: Text('No tickets found')),
               )
             else
               SliverPadding(
@@ -88,11 +103,11 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     (context, i) => Padding(
                       padding: const EdgeInsets.only(bottom: 14),
                       child: _TicketCard(
-                        ticket: _tickets[i],
-                        onTap: () => context.go('/tickets/${_tickets[i].id}'),
+                        ticket: _visible[i],
+                        onTap: () => context.go('/tickets/${_visible[i].id}'),
                       ),
                     ),
-                    childCount: _tickets.length,
+                    childCount: _visible.length,
                   ),
                 ),
               ),
