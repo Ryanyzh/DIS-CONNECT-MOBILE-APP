@@ -1,6 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
@@ -42,8 +46,39 @@ class _Priority {
 
 class _AttachedFile {
   final String name;
-  final int sizeKb;
-  const _AttachedFile({required this.name, required this.sizeKb});
+  final Uint8List bytes;
+  final String mimeType;
+  int get sizeBytes => bytes.length;
+  int get sizeKb => (bytes.length / 1024).ceil();
+  _AttachedFile({required this.name, required this.bytes, required this.mimeType});
+}
+
+String _mimeFromExtension(String ext) {
+  switch (ext.toLowerCase()) {
+    case 'pdf':  return 'application/pdf';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'png':  return 'image/png';
+    case 'doc':  return 'application/msword';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'xls':  return 'application/vnd.ms-excel';
+    case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    default:     return 'application/octet-stream';
+  }
+}
+
+IconData _fileIcon(String mimeType) {
+  if (mimeType.startsWith('image/'))           return Icons.image_outlined;
+  if (mimeType == 'application/pdf')           return Icons.picture_as_pdf_outlined;
+  if (mimeType.contains('sheet') || mimeType.contains('excel')) return Icons.table_chart_outlined;
+  return Icons.description_outlined;
+}
+
+Color _fileIconColor(String mimeType) {
+  if (mimeType.startsWith('image/'))           return const Color(0xFF3B82F6);
+  if (mimeType == 'application/pdf')           return const Color(0xFFEF4444);
+  if (mimeType.contains('sheet') || mimeType.contains('excel')) return const Color(0xFF22C55E);
+  return const Color(0xFF6366F1);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -153,13 +188,34 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     setState(() => _isSubmitting = true);
     try {
       final repo = TicketRepository(ApiClient());
-      await repo.createTicket(
+
+      // Step 1 — create ticket, get ticket_id back
+      final response = await repo.createTicket(
         subject:     _subjectController.text.trim(),
         categoryId:  _selectedCategory!.id,
         description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
         priorityId:  _selectedPriority?.id,
         dueAt:       _dueDate,
       );
+      final ticketId = response['ticket']['ticket_id'] as String;
+
+      // Steps 2 & 3 — for each file: upload to Storage, then record metadata
+      for (final file in _attachments) {
+        final storagePath = 'tickets/$ticketId/${file.name}';
+
+        await FirebaseStorage.instance
+            .ref(storagePath)
+            .putData(file.bytes, SettableMetadata(contentType: file.mimeType));
+
+        await repo.createAttachment(
+          ticketId:  ticketId,
+          fileName:  file.name,
+          filePath:  storagePath,
+          fileType:  file.mimeType,
+          fileSize:  file.sizeBytes,
+        );
+      }
+
       if (mounted) context.go('/tickets');
     } catch (_) {
       if (mounted) _snack('Failed to submit ticket. Please try again.');
@@ -214,8 +270,28 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   // ── Attachment ────────────────────────────────────────────────────────────
 
-  void _addAttachment() {
-    _snack('File picker coming soon');
+  Future<void> _addAttachment() async {
+    final result = await FilePicker.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'],
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      _snack('File exceeds the 10 MB limit');
+      return;
+    }
+
+    setState(() {
+      _attachments.add(_AttachedFile(
+        name:     file.name,
+        bytes:    file.bytes!,
+        mimeType: _mimeFromExtension(file.extension ?? ''),
+      ));
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1157,9 +1233,9 @@ class _AttachmentsBox extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.picture_as_pdf_outlined,
-                        color: Color(0xFFEF4444),
+                      Icon(
+                        _fileIcon(f.mimeType),
+                        color: _fileIconColor(f.mimeType),
                         size: 26,
                       ),
                       const SizedBox(width: 10),
