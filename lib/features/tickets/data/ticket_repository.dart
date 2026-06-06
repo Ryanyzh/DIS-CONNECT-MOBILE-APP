@@ -12,15 +12,22 @@ class TicketRepository {
     return data.map((item) => Ticket.fromJson(item)).toList();
   }
 
-  Future<void> createTicket({
-    required String title,
-    required String category,
-    required String description,
+  Future<Map<String, dynamic>> createTicket({
+    required String subject,
+    required String categoryId,
+    String? description,
+    String? priorityId,
+    DateTime? dueAt,
   }) async {
-    await apiClient.post('/tickets', {
-      'title': title,
-      'category': category,
-      'description': description,
-    });
+    final body = <String, dynamic>{
+      'subject': subject,
+      'category_id': categoryId,
+      'source': 'mobile',
+      if (description != null && description.isNotEmpty) 'description': description,
+      'priority_id': ?priorityId,
+      if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+    };
+    final response = await apiClient.post('/api/v1/tickets', body);
+    return response as Map<String, dynamic>;
   }
 }

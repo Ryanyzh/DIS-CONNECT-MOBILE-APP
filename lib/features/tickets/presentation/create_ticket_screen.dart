@@ -2,37 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Swap data with database when backend is ready
+// IDs come from seeded backend data — replace with a fetch from
+// /api/v1/categories and /api/v1/priorities when those endpoints exist.
 // ─────────────────────────────────────────────────────────────────────────────
 const _categories = [
-  _Category('Reimbursement', Icons.receipt_long_outlined),
-  _Category('Internship', Icons.work_outline),
-  _Category('Scholarship', Icons.school_outlined),
-  _Category('Leave', Icons.calendar_today_outlined),
-  _Category('Exchange', Icons.flight_outlined),
-  _Category('Policy', Icons.policy_outlined),
+  _Category('Reimbursement', Icons.receipt_long_outlined,  '503b3a9a-fc71-5c51-83b9-f24ddf9725dc'),
+  _Category('Internship',    Icons.work_outline,           '2d267226-a9d7-50f9-a6f6-c36ebee38261'),
+  _Category('Scholarship',   Icons.school_outlined,        'b149db0c-ce44-5ee7-8565-21a65c4891b3'),
+  _Category('Leave',         Icons.calendar_today_outlined,'50739be1-ff48-5fe4-8704-a31a47df2558'),
+  _Category('Exchange',      Icons.flight_outlined,        '9d250fae-12f8-5a62-b383-11434111cf6c'),
+  _Category('Policy',        Icons.policy_outlined,        '4308c61a-353f-5c6c-b09c-830cbe0cb101'),
 ];
 
 class _Category {
   final String label;
   final IconData icon;
-  const _Category(this.label, this.icon);
+  final String id;
+  const _Category(this.label, this.icon, this.id);
 }
 
 const _priorities = [
-  _Priority('Low', Icons.arrow_downward_rounded, Color(0xFF22C55E)),
-  _Priority('Medium', Icons.remove_rounded, Color(0xFFF59E0B)),
-  _Priority('High', Icons.arrow_upward_rounded, Color(0xFFEF4444)),
-  _Priority('Critical', Icons.priority_high_rounded, Color(0xFF7C3AED)),
+  _Priority('Low',      Icons.arrow_downward_rounded, Color(0xFF22C55E), 'c17adf18-56fb-5686-84ba-52a3c37ea9e1'),
+  _Priority('Medium',   Icons.remove_rounded,         Color(0xFFF59E0B), '420abc47-82f8-5267-acc2-737d0ed0739b'),
+  _Priority('High',     Icons.arrow_upward_rounded,   Color(0xFFEF4444), 'f1b9f4e8-4723-50b5-92ae-ddd8d5b929db'),
+  _Priority('Critical', Icons.priority_high_rounded,  Color(0xFF7C3AED), '871d40f6-a662-5c2b-92b4-1258a23ae40a'),
 ];
 
 class _Priority {
   final String label;
   final IconData icon;
   final Color color;
-  const _Priority(this.label, this.icon, this.color);
+  final String id;
+  const _Priority(this.label, this.icon, this.color, this.id);
 }
 
 class _AttachedFile {
@@ -146,10 +151,20 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   Future<void> _submit() async {
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (mounted) {
-      setState(() => _isSubmitting = false);
-      context.go('/tickets');
+    try {
+      final repo = TicketRepository(ApiClient());
+      await repo.createTicket(
+        subject:     _subjectController.text.trim(),
+        categoryId:  _selectedCategory!.id,
+        description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
+        priorityId:  _selectedPriority?.id,
+        dueAt:       _dueDate,
+      );
+      if (mounted) context.go('/tickets');
+    } catch (_) {
+      if (mounted) _snack('Failed to submit ticket. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
