@@ -183,6 +183,9 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   Future<void> _load() async {
     try {
       final data = await TicketRepository(ApiClient()).getTicket(widget.ticketId);
+      debugPrint('=== TICKET RAW RESPONSE ===');
+      debugPrint(data.toString());
+      debugPrint('===========================');
       if (mounted) setState(() { _detail = TicketDetailData.fromJson(data); _loading = false; });
     } catch (e) {
       debugPrint('Failed to load ticket: $e');
