@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -12,6 +14,14 @@ class AttachmentFile {
   final String name;
   final int sizeKb;
   const AttachmentFile({required this.name, required this.sizeKb});
+
+  factory AttachmentFile.fromJson(Map<String, dynamic> json) {
+    final sizeBytes = (json['file_size'] ?? json['size_bytes'] ?? 0) as num;
+    return AttachmentFile(
+      name:   (json['file_name'] ?? json['name'] ?? '').toString(),
+      sizeKb: (sizeBytes / 1024).ceil(),
+    );
+  }
 }
 
 class TicketTask {
@@ -86,6 +96,66 @@ class TicketDetailData {
     this.closedAt,
     this.attachments = const [],
   });
+
+  factory TicketDetailData.fromJson(Map<String, dynamic> json) {
+    String resolveNested(dynamic field, String nameKey) {
+      if (field is Map) return (field[nameKey] ?? '').toString();
+      if (field is String) return field;
+      return '';
+    }
+
+    final rawStatus   = json['status'];
+    final rawCategory = json['category'];
+    final rawPriority = json['priority'];
+    final rawOfficer  = json['assigned_officer'] ?? json['assigned_to'];
+    final rawEscalation = json['escalation'];
+
+    final colorCode = rawPriority is Map
+        ? rawPriority['color_code']?.toString()
+        : json['priority_color']?.toString();
+
+    final rawAttachments = (json['attachments'] as List?) ?? [];
+
+    return TicketDetailData(
+      ticketCode:       (json['ticket_code'] ?? json['display_id'] ?? '').toString(),
+      subject:          (json['subject'] ?? json['title'] ?? '').toString(),
+      category:         resolveNested(rawCategory, 'category_name'),
+      priority:         resolveNested(rawPriority, 'priority_name').isEmpty
+                            ? null
+                            : resolveNested(rawPriority, 'priority_name'),
+      priorityColor:    _colorFromHex(colorCode),
+      statusName:       resolveNested(rawStatus, 'status_name'),
+      statusType:       rawStatus is Map ? rawStatus['status_type']?.toString() : json['status_type']?.toString(),
+      isClosed:         (rawStatus is Map ? rawStatus['is_closed'] : json['is_closed']) == true,
+      description:      json['description']?.toString(),
+      source:           json['source']?.toString(),
+      officerName:      rawOfficer is Map ? rawOfficer['name']?.toString() : json['officer_name']?.toString(),
+      officerRole:      rawOfficer is Map ? rawOfficer['role']?.toString() : json['officer_role']?.toString(),
+      officerInitials:  rawOfficer is Map ? rawOfficer['initials']?.toString() : json['officer_initials']?.toString(),
+      isEscalated:      (json['is_escalated'] ?? false) == true,
+      escalatedToName:  rawEscalation is Map ? rawEscalation['to_name']?.toString() : json['escalated_to_name']?.toString(),
+      escalatedAt:      _parseDate(rawEscalation is Map ? rawEscalation['escalated_at'] : json['escalated_at']),
+      createdAt:        _parseDate(json['created_at']) ?? DateTime.now(),
+      updatedAt:        _parseDate(json['updated_at']) ?? DateTime.now(),
+      dueAt:            _parseDate(json['due_at']),
+      resolvedAt:       _parseDate(json['resolved_at']),
+      closedAt:         _parseDate(json['closed_at']),
+      attachments:      rawAttachments
+                            .map((a) => AttachmentFile.fromJson(a as Map<String, dynamic>))
+                            .toList(),
+    );
+  }
+
+  static DateTime? _parseDate(dynamic v) =>
+      v == null ? null : DateTime.tryParse(v.toString());
+
+  static Color? _colorFromHex(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final clean = hex.replaceFirst('#', '');
+    if (clean.length != 6) return null;
+    final value = int.tryParse('FF$clean', radix: 16);
+    return value != null ? Color(value) : null;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,38 +171,51 @@ class TicketDetailScreen extends StatefulWidget {
 }
 
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
-  // Sample detail — swap for repository lookup by ticketId
-  TicketDetailData get _detail => TicketDetailData(
-    ticketCode: 'REB-2024-0012',
-    subject: 'Reimbursement for Flight Ticket — Exchange Programme',
-    category: 'Reimbursement',
-    priority: 'High',
-    priorityColor: const Color(0xFFEF4444),
-    statusName: 'In Review',
-    statusType: 'Processing',
-    isClosed: false,
-    description:
-        'I am requesting reimbursement for my flight ticket purchased for '
-        'the NUS Global Exchange Programme. The flight was on 12 Sep 2024 '
-        'from Singapore to Frankfurt. Please find attached the invoice and '
-        'boarding pass for your reference.',
-    source: 'Mobile App',
-    officerName: 'Eileen (Scholarship Admin)',
-    officerRole: 'Scholarship Administration',
-    officerInitials: 'EA',
-    isEscalated: false,
-    createdAt: DateTime(2024, 9, 10, 9, 0),
-    updatedAt: DateTime(2024, 9, 10, 11, 5),
-    dueAt: DateTime(2024, 9, 24),
-    attachments: const [
-      AttachmentFile(name: 'flight_ticket.pdf', sizeKb: 245),
-      AttachmentFile(name: 'invoice.pdf', sizeKb: 130),
-    ],
-  );
+  TicketDetailData? _detail;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final data = await TicketRepository(ApiClient()).getTicket(widget.ticketId);
+      if (mounted) setState(() { _detail = TicketDetailData.fromJson(data); _loading = false; });
+    } catch (e) {
+      debugPrint('Failed to load ticket: $e');
+      if (mounted) setState(() { _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final detail = _detail;
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_detail == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Failed to load ticket'),
+              const SizedBox(height: 12),
+              TextButton(onPressed: () { setState(() { _loading = true; }); _load(); }, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+    final detail = _detail!;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,

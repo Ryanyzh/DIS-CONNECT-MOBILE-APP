@@ -7,9 +7,13 @@ class TicketRepository {
   TicketRepository(this.apiClient);
 
   Future<List<Ticket>> getTickets() async {
-    final data = await apiClient.get('/tickets') as List;
+    final response = await apiClient.get('/api/v1/tickets') as Map<String, dynamic>;
+    final list = response['tickets'] as List;
+    return list.map((item) => Ticket.fromJson(item as Map<String, dynamic>)).toList();
+  }
 
-    return data.map((item) => Ticket.fromJson(item)).toList();
+  Future<Map<String, dynamic>> getTicket(String ticketId) async {
+    return await apiClient.get('/api/v1/tickets/$ticketId') as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> createTicket({

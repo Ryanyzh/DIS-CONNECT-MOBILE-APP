@@ -1,27 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
-import 'package:disconnect_mobile/features/tickets/widgets/search_bar.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// History entry — status change event shown in the list
-// ─────────────────────────────────────────────────────────────────────────────
-
-class TicketEntry {
-  final Ticket ticket;
-  final String changedBy;
-  final DateTime changedAt;
-
-  const TicketEntry({
-    required this.ticket,
-    required this.changedBy,
-    required this.changedAt,
-  });
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,63 +18,24 @@ class TicketListScreen extends StatefulWidget {
 }
 
 class _TicketListScreenState extends State<TicketListScreen> {
-  // Sample data — replace with repository calls when backend is ready
-  final List<TicketEntry> _all = [
-    TicketEntry(
-      ticket: Ticket(
-        id: '1',
-        displayId: 'REB-2024-0012',
-        title: 'Exchange Programme Reimbursement',
-        category: 'Reimbursement',
-        status: 'In Review',
-        priority: 'Medium',
-        createdAt: DateTime(2024, 5, 12, 10, 15),
-      ),
-      changedBy: 'Eileen',
-      changedAt: DateTime(2024, 5, 12, 10, 15),
-    ),
-    TicketEntry(
-      ticket: Ticket(
-        id: '2',
-        displayId: 'EXCH-2024-0051',
-        title: 'Internship Forms Submission',
-        category: 'Internship',
-        status: 'Waiting',
-        priority: 'High',
-        createdAt: DateTime(2024, 5, 11, 14, 32),
-      ),
-      changedBy: 'Benjamin',
-      changedAt: DateTime(2024, 5, 11, 14, 32),
-    ),
-    TicketEntry(
-      ticket: Ticket(
-        id: '3',
-        displayId: 'ACD-2024-0080',
-        title: 'Scholarship Declaration',
-        category: 'Scholarship',
-        status: 'Resolved',
-        priority: 'Low',
-        createdAt: DateTime(2024, 5, 8, 11, 47),
-      ),
-      changedBy: 'Diana',
-      changedAt: DateTime(2024, 5, 8, 11, 47),
-    ),
-    TicketEntry(
-      ticket: Ticket(
-        id: '4',
-        displayId: 'INT-2024-0033',
-        title: 'Leave Application',
-        category: 'Leave',
-        status: 'Closed',
-        priority: 'Low',
-        createdAt: DateTime(2024, 4, 28, 9, 0),
-      ),
-      changedBy: 'Marcus',
-      changedAt: DateTime(2024, 4, 28, 9, 0),
-    ),
-  ];
+  List<Ticket> _tickets = [];
+  bool _loading = true;
 
-  List<TicketEntry> get visible => _all;
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final tickets = await TicketRepository(ApiClient()).getTickets();
+      if (mounted) setState(() { _tickets = tickets; _loading = false; });
+    } catch (e) {
+      debugPrint('Failed to load tickets: $e');
+      if (mounted) setState(() { _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,22 +72,30 @@ class _TicketListScreenState extends State<TicketListScreen> {
             ),
 
             // ── Cards ───────────────────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _TicketCard(
-                      entry: visible[i],
-                      onTap: () =>
-                          context.go('/tickets/${visible[i].ticket.id}'),
+            if (_loading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_tickets.isEmpty)
+              const SliverFillRemaining(
+                child: Center(child: Text('No tickets yet')),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: _TicketCard(
+                        ticket: _tickets[i],
+                        onTap: () => context.go('/tickets/${_tickets[i].id}'),
+                      ),
                     ),
+                    childCount: _tickets.length,
                   ),
-                  childCount: visible.length,
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -155,13 +108,14 @@ class _TicketListScreenState extends State<TicketListScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _TicketCard extends StatelessWidget {
-  final TicketEntry entry;
+  final Ticket ticket;
   final VoidCallback onTap;
 
-  const _TicketCard({required this.entry, required this.onTap});
+  const _TicketCard({required this.ticket, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final date = ticket.updatedAt ?? ticket.createdAt;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -185,55 +139,43 @@ class _TicketCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  entry.ticket.displayId.isNotEmpty
-                      ? entry.ticket.displayId
-                      : entry.ticket.id,
+                  ticket.displayId.isNotEmpty ? ticket.displayId : ticket.id,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: AppColors.ink,
                   ),
                 ),
-                TicketStatusBadge(status: entry.ticket.status),
+                TicketStatusBadge(status: ticket.status),
               ],
             ),
             const SizedBox(height: 10),
 
-            // ── Action description ────────────────────────────────────
-            RichText(
-              text: TextSpan(
-                style: AppTypography.bodySm.copyWith(color: AppColors.body),
-                children: [
-                  TextSpan(
-                    text: 'Status changed to ${entry.ticket.status}\nby ',
-                  ),
-                  TextSpan(
-                    text: entry.changedBy,
-                    style: const TextStyle(
-                      color: Color(0xFF4338CA),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+            // ── Subject ───────────────────────────────────────────────
+            Text(
+              ticket.title,
+              style: AppTypography.bodySm.copyWith(color: AppColors.body),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 10),
 
             // ── Date ─────────────────────────────────────────────────
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: 13,
-                  color: AppColors.mute,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  DateFormat('d MMM yyyy  hh:mm a').format(entry.changedAt),
-                  style: AppTypography.caption,
-                ),
-              ],
-            ),
+            if (date != null)
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 13,
+                    color: AppColors.mute,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    DateFormat('d MMM yyyy  hh:mm a').format(date),
+                    style: AppTypography.caption,
+                  ),
+                ],
+              ),
           ],
         ),
       ),
