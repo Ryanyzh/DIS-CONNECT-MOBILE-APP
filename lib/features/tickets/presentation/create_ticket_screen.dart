@@ -14,12 +14,36 @@ import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 // /api/v1/categories and /api/v1/priorities when those endpoints exist.
 // ─────────────────────────────────────────────────────────────────────────────
 const _categories = [
-  _Category('Reimbursement', Icons.receipt_long_outlined,  '503b3a9a-fc71-5c51-83b9-f24ddf9725dc'),
-  _Category('Internship',    Icons.work_outline,           '2d267226-a9d7-50f9-a6f6-c36ebee38261'),
-  _Category('Scholarship',   Icons.school_outlined,        'b149db0c-ce44-5ee7-8565-21a65c4891b3'),
-  _Category('Leave',         Icons.calendar_today_outlined,'50739be1-ff48-5fe4-8704-a31a47df2558'),
-  _Category('Exchange',      Icons.flight_outlined,        '9d250fae-12f8-5a62-b383-11434111cf6c'),
-  _Category('Policy',        Icons.policy_outlined,        '4308c61a-353f-5c6c-b09c-830cbe0cb101'),
+  _Category(
+    'Reimbursement',
+    Icons.receipt_long_outlined,
+    '503b3a9a-fc71-5c51-83b9-f24ddf9725dc',
+  ),
+  _Category(
+    'Internship',
+    Icons.work_outline,
+    '2d267226-a9d7-50f9-a6f6-c36ebee38261',
+  ),
+  _Category(
+    'Scholarship',
+    Icons.school_outlined,
+    'b149db0c-ce44-5ee7-8565-21a65c4891b3',
+  ),
+  _Category(
+    'Leave',
+    Icons.calendar_today_outlined,
+    '50739be1-ff48-5fe4-8704-a31a47df2558',
+  ),
+  _Category(
+    'Exchange',
+    Icons.flight_outlined,
+    '9d250fae-12f8-5a62-b383-11434111cf6c',
+  ),
+  _Category(
+    'Policy',
+    Icons.policy_outlined,
+    '4308c61a-353f-5c6c-b09c-830cbe0cb101',
+  ),
 ];
 
 class _Category {
@@ -30,10 +54,30 @@ class _Category {
 }
 
 const _priorities = [
-  _Priority('Low',      Icons.arrow_downward_rounded, Color(0xFF22C55E), 'c17adf18-56fb-5686-84ba-52a3c37ea9e1'),
-  _Priority('Medium',   Icons.remove_rounded,         Color(0xFFF59E0B), '420abc47-82f8-5267-acc2-737d0ed0739b'),
-  _Priority('High',     Icons.arrow_upward_rounded,   Color(0xFFEF4444), 'f1b9f4e8-4723-50b5-92ae-ddd8d5b929db'),
-  _Priority('Critical', Icons.priority_high_rounded,  Color(0xFF7C3AED), '871d40f6-a662-5c2b-92b4-1258a23ae40a'),
+  _Priority(
+    'Low',
+    Icons.arrow_downward_rounded,
+    Color(0xFF22C55E),
+    'c17adf18-56fb-5686-84ba-52a3c37ea9e1',
+  ),
+  _Priority(
+    'Medium',
+    Icons.remove_rounded,
+    Color(0xFFF59E0B),
+    '420abc47-82f8-5267-acc2-737d0ed0739b',
+  ),
+  _Priority(
+    'High',
+    Icons.arrow_upward_rounded,
+    Color(0xFFEF4444),
+    'f1b9f4e8-4723-50b5-92ae-ddd8d5b929db',
+  ),
+  _Priority(
+    'Critical',
+    Icons.priority_high_rounded,
+    Color(0xFF7C3AED),
+    '871d40f6-a662-5c2b-92b4-1258a23ae40a',
+  ),
 ];
 
 class _Priority {
@@ -50,34 +94,48 @@ class _AttachedFile {
   final String mimeType;
   int get sizeBytes => bytes.length;
   int get sizeKb => (bytes.length / 1024).ceil();
-  _AttachedFile({required this.name, required this.bytes, required this.mimeType});
+  _AttachedFile({
+    required this.name,
+    required this.bytes,
+    required this.mimeType,
+  });
 }
 
 String _mimeFromExtension(String ext) {
   switch (ext.toLowerCase()) {
-    case 'pdf':  return 'application/pdf';
+    case 'pdf':
+      return 'application/pdf';
     case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'png':  return 'image/png';
-    case 'doc':  return 'application/msword';
-    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    case 'xls':  return 'application/vnd.ms-excel';
-    case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    default:     return 'application/octet-stream';
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'doc':
+      return 'application/msword';
+    case 'docx':
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'xls':
+      return 'application/vnd.ms-excel';
+    case 'xlsx':
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    default:
+      return 'application/octet-stream';
   }
 }
 
 IconData _fileIcon(String mimeType) {
-  if (mimeType.startsWith('image/'))           return Icons.image_outlined;
-  if (mimeType == 'application/pdf')           return Icons.picture_as_pdf_outlined;
-  if (mimeType.contains('sheet') || mimeType.contains('excel')) return Icons.table_chart_outlined;
+  if (mimeType.startsWith('image/')) return Icons.image_outlined;
+  if (mimeType == 'application/pdf') return Icons.picture_as_pdf_outlined;
+  if (mimeType.contains('sheet') || mimeType.contains('excel'))
+    return Icons.table_chart_outlined;
   return Icons.description_outlined;
 }
 
 Color _fileIconColor(String mimeType) {
-  if (mimeType.startsWith('image/'))           return const Color(0xFF3B82F6);
-  if (mimeType == 'application/pdf')           return const Color(0xFFEF4444);
-  if (mimeType.contains('sheet') || mimeType.contains('excel')) return const Color(0xFF22C55E);
+  if (mimeType.startsWith('image/')) return const Color(0xFF3B82F6);
+  if (mimeType == 'application/pdf') return const Color(0xFFEF4444);
+  if (mimeType.contains('sheet') || mimeType.contains('excel'))
+    return const Color(0xFF22C55E);
   return const Color(0xFF6366F1);
 }
 
@@ -191,33 +249,41 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
       // Step 1 — create ticket, get ticket_id back
       final response = await repo.createTicket(
-        subject:     _subjectController.text.trim(),
-        categoryId:  _selectedCategory!.id,
-        description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
-        priorityId:  _selectedPriority?.id,
-        dueAt:       _dueDate,
+        subject: _subjectController.text.trim(),
+        categoryId: _selectedCategory!.id,
+        description: _descController.text.trim().isEmpty
+            ? null
+            : _descController.text.trim(),
+        priorityId: _selectedPriority?.id,
+        dueAt: _dueDate,
       );
-      final ticketId = response['ticket']['ticket_id'] as String;
+      // Steps 2 & 3 — only needed when the user attached files
+      if (_attachments.isNotEmpty) {
+        final ticketId = response['ticket']['ticket_id'] as String;
 
-      // Steps 2 & 3 — for each file: upload to Storage, then record metadata
-      for (final file in _attachments) {
-        final storagePath = 'tickets/$ticketId/${file.name}';
+        for (final file in _attachments) {
+          final storagePath = 'tickets/$ticketId/${file.name}';
 
-        await FirebaseStorage.instance
-            .ref(storagePath)
-            .putData(file.bytes, SettableMetadata(contentType: file.mimeType));
+          await FirebaseStorage.instance
+              .ref(storagePath)
+              .putData(
+                file.bytes,
+                SettableMetadata(contentType: file.mimeType),
+              );
 
-        await repo.createAttachment(
-          ticketId:  ticketId,
-          fileName:  file.name,
-          filePath:  storagePath,
-          fileType:  file.mimeType,
-          fileSize:  file.sizeBytes,
-        );
+          await repo.createAttachment(
+            ticketId: ticketId,
+            fileName: file.name,
+            filePath: storagePath,
+            fileType: file.mimeType,
+            fileSize: file.sizeBytes,
+          );
+        }
       }
 
       if (mounted) context.go('/tickets');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Ticket submission error: $e');
       if (mounted) _snack('Failed to submit ticket. Please try again.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -274,7 +340,16 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     final result = await FilePicker.pickFiles(
       withData: true,
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'],
+      allowedExtensions: [
+        'pdf',
+        'jpg',
+        'jpeg',
+        'png',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+      ],
     );
     if (result == null || result.files.isEmpty) return;
     final file = result.files.first;
@@ -286,11 +361,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     }
 
     setState(() {
-      _attachments.add(_AttachedFile(
-        name:     file.name,
-        bytes:    file.bytes!,
-        mimeType: _mimeFromExtension(file.extension ?? ''),
-      ));
+      _attachments.add(
+        _AttachedFile(
+          name: file.name,
+          bytes: file.bytes!,
+          mimeType: _mimeFromExtension(file.extension ?? ''),
+        ),
+      );
     });
   }
 
