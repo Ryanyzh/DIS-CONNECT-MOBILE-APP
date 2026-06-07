@@ -205,6 +205,30 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     return _BodyBlock(text: para);
                   }),
                   const SizedBox(height: 32),
+
+                  // ── Tags ──────────────────────────────────────────────
+                  if (entry.tags.isNotEmpty) ...[
+                    const Divider(color: Color(0xFFF1F5F9), height: 1),
+                    const SizedBox(height: 20),
+                    Text(
+                      'TAGS',
+                      style: AppTypography.caption.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        color: AppColors.mute,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: entry.tags
+                          .map((tag) => _TagChip(label: tag))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
                 ],
               ),
             ),
@@ -247,6 +271,30 @@ class _CategoryChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  final String label;
+  const _TagChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          fontWeight: FontWeight.w600,
+          color: AppColors.body,
+        ),
       ),
     );
   }
