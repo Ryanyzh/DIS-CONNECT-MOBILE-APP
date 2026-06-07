@@ -9,6 +9,7 @@ import '../features/tickets/presentation/ticket_detail_screen.dart';
 import '../features/tickets/presentation/ticket_history_screen.dart';
 import '../features/tickets/presentation/ticket_conversation_screen.dart';
 import '../features/announcements/presentation/announcements_screen.dart';
+import '../features/announcements/presentation/announcement_detail_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../shared/widgets/main_shell.dart';
 
@@ -86,6 +87,14 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/announcements',
               builder: (context, state) => const AnnouncementsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) => AnnouncementDetailScreen(
+                    announcementId: state.pathParameters['id']!,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
