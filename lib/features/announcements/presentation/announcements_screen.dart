@@ -148,3 +148,134 @@ class AnnouncementsScreen extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Announcement card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AnnouncementCard extends StatelessWidget {
+  final AnnouncementEntry entry;
+  final VoidCallback onTap;
+  const _AnnouncementCard({required this.entry, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = announcementCategoryStyle(entry.category);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Category accent strip ───────────────────────────────
+                Container(width: 4, color: style.accentColor),
+
+                // ── Content ─────────────────────────────────────────────
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Icon
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: style.badgeBg,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(style.icon,
+                              color: style.accentColor, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Text
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Category badge
+                              Row(
+                                children: [
+
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Title
+                              Text(
+                                entry.title,
+                                style: AppTypography.bodySm.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Meta row
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person_outline,
+                                    size: 12,
+                                    color: AppColors.mute,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Expanded(
+                                    child: Text(
+                                      entry.author,
+                                      style: AppTypography.caption,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 11,
+                                    color: AppColors.mute,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    DateFormat('d MMM yyyy')
+                                        .format(entry.date),
+                                    style: AppTypography.caption,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right,
+                            size: 18, color: Color(0xFFCBD5E1)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
