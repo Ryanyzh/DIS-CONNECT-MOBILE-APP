@@ -45,6 +45,11 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
     final style = announcementCategoryStyle(entry.category);
     final readTime = _readingTime(entry.body);
+    final paragraphs = entry.body
+        .split('\n\n')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -185,6 +190,21 @@ class AnnouncementDetailScreen extends StatelessWidget {
                   // ── Divider ───────────────────────────────────────────
                   const Divider(color: Color(0xFFF1F5F9), height: 1),
                   const SizedBox(height: 28),
+
+                  // ── Body text ─────────────────────────────────────────
+                  ...paragraphs.map((para) {
+                    // Detect bullet lines (start with •)
+                    if (para.contains('\n') ||
+                        para.startsWith('•') ||
+                        para.contains(':\n') ||
+                        RegExp(
+                          r'^[A-Z][^.]*:\s*$',
+                        ).hasMatch(para.split('\n').first)) {
+                      return _BodyBlock(text: para);
+                    }
+                    return _BodyBlock(text: para);
+                  }),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -226,6 +246,115 @@ class _CategoryChip extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Body block — renders a single paragraph with smart formatting
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BodyBlock extends StatelessWidget {
+  final String text;
+  const _BodyBlock({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = text.split('\n');
+
+    // If the block is a single line label like "Date & Time: ..." keep inline
+    if (lines.length == 1) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 18),
+        child: Text(
+          text,
+          style: AppTypography.bodySm.copyWith(
+            color: AppColors.body,
+            height: 1.75,
+          ),
+        ),
+      );
+    }
+
+    // Multi-line block: first line may be a heading (e.g. "Date & Time:")
+    final firstLine = lines.first;
+    final rest = lines.skip(1).toList();
+
+    final isLabeledBlock =
+        firstLine.endsWith(':') ||
+        (firstLine.length < 50 &&
+            RegExp(r'^[A-Z]').hasMatch(firstLine) &&
+            !firstLine.startsWith('•'));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isLabeledBlock)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                firstLine,
+                style: AppTypography.bodySm.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.ink,
+                  height: 1.6,
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 0),
+              child: Text(
+                firstLine,
+                style: AppTypography.bodySm.copyWith(
+                  color: AppColors.body,
+                  height: 1.75,
+                ),
+              ),
+            ),
+          ...rest.map((line) {
+            final isBullet = line.trim().startsWith('•');
+            return Padding(
+              padding: EdgeInsets.only(bottom: 4, left: isBullet ? 4 : 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isBullet) ...[
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: CircleAvatar(
+                        radius: 3,
+                        backgroundColor: Color(0xFF4338CA),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        line.replaceFirst('•', '').trim(),
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.body,
+                          height: 1.7,
+                        ),
+                      ),
+                    ),
+                  ] else
+                    Expanded(
+                      child: Text(
+                        line,
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.body,
+                          height: 1.75,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
