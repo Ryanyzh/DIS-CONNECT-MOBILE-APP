@@ -9,6 +9,17 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
   const AnnouncementDetailScreen({super.key, required this.announcementId});
 
+  // ── Resolve entry ─────────────────────────────────────────────────────────
+  AnnouncementEntry? _resolve(BuildContext context) {
+    final extra = GoRouterState.of(context).extra as AnnouncementEntry?;
+    if (extra != null) return extra;
+    try {
+      return announcementsList.firstWhere((e) => e.id == announcementId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ── Reading time ──────────────────────────────────────────────────────────
   String _readingTime(String text) {
     final words = text.trim().split(RegExp(r'\s+')).length;
@@ -27,7 +38,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entry = null; // TODO: load announcement by ID
+    final entry = _resolve(context);
 
     if (entry == null) {
       return Scaffold(
