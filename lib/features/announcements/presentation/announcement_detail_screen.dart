@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/announcements/presentation/announcements_screen.dart';
 
@@ -6,6 +8,13 @@ class AnnouncementDetailScreen extends StatelessWidget {
   final String announcementId;
 
   const AnnouncementDetailScreen({super.key, required this.announcementId});
+
+  // ── Reading time ──────────────────────────────────────────────────────────
+  String _readingTime(String text) {
+    final words = text.trim().split(RegExp(r'\s+')).length;
+    final minutes = (words / 200).ceil();
+    return '$minutes min read';
+  }
 
   // ── Author initials ───────────────────────────────────────────────────────
   String _initials(String name) {
@@ -35,6 +44,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
     }
 
     final style = announcementCategoryStyle(entry.category);
+    final readTime = _readingTime(entry.body);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -91,6 +101,90 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // ── Author + meta row ─────────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: style.badgeBg,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _initials(entry.author),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: style.badgeText,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.author,
+                              style: AppTypography.bodySm.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    entry.authorRole,
+                                    style: AppTypography.caption,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text('  ·  ', style: AppTypography.caption),
+                                Text(
+                                  DateFormat(
+                                    'd MMM yyyy, h:mm a',
+                                  ).format(entry.date),
+                                  style: AppTypography.caption,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ── Read time ─────────────────────────────────────────
+                  Row(
+                    children: [
+                      const SizedBox(width: 48), // align under avatar
+                      const Icon(
+                        Icons.schedule_outlined,
+                        size: 12,
+                        color: AppColors.mute,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        readTime,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.mute,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ── Divider ───────────────────────────────────────────
+                  const Divider(color: Color(0xFFF1F5F9), height: 1),
+                  const SizedBox(height: 28),
                 ],
               ),
             ),
