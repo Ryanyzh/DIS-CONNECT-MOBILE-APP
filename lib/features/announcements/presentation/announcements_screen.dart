@@ -262,6 +262,7 @@ class AnnouncementsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  childCount: sorted.length,
                 ),
               ),
             ),
@@ -337,8 +338,12 @@ class _AnnouncementCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Category badge
-                              Row(children: [
-
+                              Row(
+                                children: [
+                                  _CategoryBadge(
+                                    label: entry.category,
+                                    style: style,
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 6),
