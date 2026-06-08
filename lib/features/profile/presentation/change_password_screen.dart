@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
@@ -15,12 +16,60 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  bool _showCurrent = false;
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.email == null) throw Exception('Not signed in');
+
+      // Re-authenticate with the current password first
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: _currentPasswordController.text,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Update to the new password
+      await user.updatePassword(_newPasswordController.text);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password updated successfully')),
+        );
+        Navigator.of(context).pop();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        final msg = switch (e.code) {
+          'wrong-password' => 'Current password is incorrect.',
+          'weak-password' => 'New password is too weak.',
+          'requires-recent-login' =>
+            'Please sign out and sign in again before changing your password.',
+          _ => e.message ?? 'Failed to update password.',
+        };
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -130,6 +179,48 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+
+              // ── Submit button ─────────────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3730A3),
+                    disabledBackgroundColor: const Color(
+                      0xFF3730A3,
+                    ).withValues(alpha: 0.6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppBorderRadius.wiseLg,
+                      ),
+                    ),
+                  ),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.lock_reset_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                  label: Text(
+                    _isLoading ? 'Updating...' : 'Update Password',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
