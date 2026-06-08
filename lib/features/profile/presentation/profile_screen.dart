@@ -117,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
                   _SettingsItem(
                     icon: Icons.lock_outline,
                     label: 'Change Password',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/change-password'),
                   ),
                 ],
               ),
