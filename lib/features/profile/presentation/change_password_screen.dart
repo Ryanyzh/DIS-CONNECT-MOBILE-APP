@@ -18,6 +18,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   bool _showCurrent = false;
   bool _isLoading = false;
+  bool _showNew = false;
+  bool _showConfirm = false;
 
   @override
   void dispose() {
@@ -26,6 +28,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
+
+  // ── Password requirement checks ──────────────────────────────────────────
+
+  String get _newPw => _newPasswordController.text;
+
+  bool get _reqLength => _newPw.length >= 8;
+  bool get _reqUpper => _newPw.contains(RegExp(r'[A-Z]'));
+  bool get _reqLower => _newPw.contains(RegExp(r'[a-z]'));
+  bool get _reqDigit => _newPw.contains(RegExp(r'[0-9]'));
+  bool get _reqMatch =>
+      _newPw.isNotEmpty && _newPw == _confirmPasswordController.text;
+
+  bool get _allRequirementsMet =>
+      _reqLength && _reqUpper && _reqLower && _reqDigit;
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
@@ -163,7 +179,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   _PasswordField(
                     controller: _newPasswordController,
                     hint: 'Enter new password',
+                    visible: _showNew,
+                    onToggle: () => setState(() => _showNew = !_showNew),
                     onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Required';
+                      if (!_allRequirementsMet) {
+                        return 'Password does not meet all requirements';
+                      }
+                      return null;
+                    },
                   ),
                   const Divider(
                     height: 1,
@@ -175,10 +200,39 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   _PasswordField(
                     controller: _confirmPasswordController,
                     hint: 'Confirm new password',
+                    visible: _showConfirm,
+                    onToggle: () =>
+                        setState(() => _showConfirm = !_showConfirm),
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Required';
+                      if (v != _newPasswordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
               const SizedBox(height: 16),
+
+              // ── Requirements checklist ───────────────────────────────────
+              _RequirementsCard(
+                requirements: [
+                  _Requirement(label: 'At least 8 characters', met: _reqLength),
+                  _Requirement(
+                    label: 'One uppercase letter (A–Z)',
+                    met: _reqUpper,
+                  ),
+                  _Requirement(
+                    label: 'One lowercase letter (a–z)',
+                    met: _reqLower,
+                  ),
+                  _Requirement(label: 'One number (0–9)', met: _reqDigit),
+                  _Requirement(label: 'Passwords match', met: _reqMatch),
+                ],
+              ),
+              const SizedBox(height: 32),
 
               // ── Submit button ─────────────────────────────────────────────
               SizedBox(
@@ -311,6 +365,75 @@ class _PasswordField extends StatelessWidget {
           ),
           onPressed: onToggle,
         ),
+      ),
+    );
+  }
+}
+
+class _Requirement {
+  final String label;
+  final bool met;
+  const _Requirement({required this.label, required this.met});
+}
+
+class _RequirementsCard extends StatelessWidget {
+  final List<_Requirement> requirements;
+  const _RequirementsCard({required this.requirements});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Password Requirements',
+            style: AppTypography.caption.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.body,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...requirements.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: r.met
+                          ? const Color(0xFF059669)
+                          : const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      r.met ? Icons.check_rounded : Icons.remove,
+                      size: 11,
+                      color: r.met ? Colors.white : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    r.label,
+                    style: AppTypography.caption.copyWith(
+                      color: r.met ? AppColors.body : AppColors.mute,
+                      fontWeight: r.met ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
