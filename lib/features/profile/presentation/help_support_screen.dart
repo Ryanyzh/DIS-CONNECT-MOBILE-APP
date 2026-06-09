@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'package:disconnect_mobile/core/theme/design_system.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _Faq {
+  final String question;
+  final String answer;
+  const _Faq({required this.question, required this.answer});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen
+// ─────────────────────────────────────────────────────────────────────────────
+
+class HelpSupportScreen extends StatelessWidget {
+  const HelpSupportScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0.5,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Text(
+          'Help & Support',
+          style: AppTypography.bodyMd.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.ink,
+            fontSize: 17,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        children: [
+          // ── Hero ──────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4338CA), Color(0xFF7C3AED)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppBorderRadius.wiseLg),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.support_agent_rounded,
+                  size: 40,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'How can we help?',
+                        style: AppTypography.bodyMd.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Browse the FAQs below or reach out to us directly.',
+                        style: AppTypography.caption.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // ── FAQ ───────────────────────────────────────────────────────
+          _SectionLabel(label: 'FREQUENTLY ASKED QUESTIONS'),
+          const SizedBox(height: 10),
+          _FaqCard(faqs: _faqs),
+          const SizedBox(height: 28),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTypography.caption.copyWith(
+        fontWeight: FontWeight.w700,
+        fontSize: 11,
+        color: AppColors.mute,
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+}
+
+class _FaqCard extends StatelessWidget {
+  final List<_Faq> faqs;
+  const _FaqCard({required this.faqs});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        child: Column(
+          children: faqs.asMap().entries.map((e) {
+            final isLast = e.key == faqs.length - 1;
+            return Column(
+              children: [
+                Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    leading: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEDE9FE),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.help_outline_rounded,
+                        size: 14,
+                        color: Color(0xFF7C3AED),
+                      ),
+                    ),
+                    title: Text(
+                      e.value.question,
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    iconColor: AppColors.mute,
+                    collapsedIconColor: AppColors.mute,
+                    children: [
+                      Text(
+                        e.value.answer,
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.body,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF1F5F9),
+                    indent: 60,
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}

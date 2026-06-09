@@ -127,12 +127,7 @@ class ProfileScreen extends StatelessWidget {
                   _SettingsItem(
                     icon: Icons.help_outline,
                     label: 'Help & Support',
-                    onTap: () {},
-                  ),
-                  _SettingsItem(
-                    icon: Icons.info_outline,
-                    label: 'About',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/help'),
                   ),
                 ],
               ),
