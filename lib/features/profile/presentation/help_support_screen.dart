@@ -95,6 +95,34 @@ class HelpSupportScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _FaqCard(faqs: _faqs),
           const SizedBox(height: 28),
+
+          // ── Contact ───────────────────────────────────────────────────
+          _SectionLabel(label: 'CONTACT SUPPORT'),
+          const SizedBox(height: 10),
+          _ContactCard(
+            items: [
+              _ContactItem(
+                icon: Icons.email_outlined,
+                iconBg: const Color(0xFFDBEAFE),
+                iconColor: const Color(0xFF2563EB),
+                label: 'Email Us',
+                subtitle: 'support@dis-connect.sg',
+                badge: 'Replies within 1 – 2 business days',
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Opening mail app…')),
+                ),
+              ),
+              _ContactItem(
+                icon: Icons.confirmation_number_outlined,
+                iconBg: const Color(0xFFEDE9FE),
+                iconColor: const Color(0xFF7C3AED),
+                label: 'Submit a Ticket',
+                subtitle: 'Create a ticket for technical issues',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
         ],
       ),
     );
@@ -197,6 +225,135 @@ class _FaqCard extends StatelessWidget {
             );
           }).toList(),
         ),
+      ),
+    );
+  }
+}
+
+class _ContactItem {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
+  final String subtitle;
+  final String? badge;
+  final VoidCallback onTap;
+
+  const _ContactItem({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
+    required this.subtitle,
+    this.badge,
+    required this.onTap,
+  });
+}
+
+class _ContactCard extends StatelessWidget {
+  final List<_ContactItem> items;
+  const _ContactCard({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: items.asMap().entries.map((e) {
+          final item = e.value;
+          final isLast = e.key == items.length - 1;
+          return Column(
+            children: [
+              InkWell(
+                onTap: item.onTap,
+                borderRadius: BorderRadius.vertical(
+                  top: e.key == 0
+                      ? const Radius.circular(AppBorderRadius.wiseMd)
+                      : Radius.zero,
+                  bottom: isLast
+                      ? const Radius.circular(AppBorderRadius.wiseMd)
+                      : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: item.iconBg,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(item.icon, size: 20, color: item.iconColor),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.label,
+                              style: AppTypography.bodySm.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(item.subtitle, style: AppTypography.caption),
+                            if (item.badge != null) ...[
+                              const SizedBox(height: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0FDF4),
+                                  borderRadius: BorderRadius.circular(9999),
+                                  border: Border.all(
+                                    color: const Color(0xFFBBF7D0),
+                                  ),
+                                ),
+                                child: Text(
+                                  item.badge!,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF16A34A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Color(0xFFCBD5E1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast)
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFF1F5F9),
+                  indent: 70,
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
