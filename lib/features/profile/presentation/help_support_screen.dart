@@ -123,6 +123,18 @@ class HelpSupportScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 28),
+
+          // ── Quick tips ────────────────────────────────────────────────
+          _SectionLabel(label: 'QUICK TIPS'),
+          const SizedBox(height: 10),
+          _TipsCard(
+            tips: const [
+              'Keep your ticket description concise but include all relevant details.',
+              'Attach supporting documents (invoices, forms) when submitting.',
+              'Check the Announcements tab for platform-wide updates.',
+              'Enable notifications so you never miss a status change.',
+            ],
+          ),
         ],
       ),
     );
@@ -352,6 +364,63 @@ class _ContactCard extends StatelessWidget {
                   indent: 70,
                 ),
             ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _TipsCard extends StatelessWidget {
+  final List<String> tips;
+  const _TipsCard({required this.tips});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: tips.asMap().entries.map((e) {
+          final isLast = e.key == tips.length - 1;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEDE9FE),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${e.key + 1}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    e.value,
+                    style: AppTypography.bodySm.copyWith(
+                      color: AppColors.body,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         }).toList(),
       ),
