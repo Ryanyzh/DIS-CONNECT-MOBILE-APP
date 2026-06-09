@@ -12,6 +12,7 @@ import '../features/announcements/presentation/announcements_screen.dart';
 import '../features/announcements/presentation/announcement_detail_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/profile/presentation/change_password_screen.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
 import '../shared/widgets/main_shell.dart';
 
 final appRouter = GoRouter(
@@ -107,6 +108,10 @@ final appRouter = GoRouter(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
               routes: [
+                GoRoute(
+                  path: 'edit',
+                  builder: (context, state) => const EditProfileScreen(),
+                ),
                 GoRoute(
                   path: 'change-password',
                   builder: (context, state) => const ChangePasswordScreen(),

@@ -107,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
                   _SettingsItem(
                     icon: Icons.person_outline,
                     label: 'Edit Profile',
-                    onTap: () {},
+                    onTap: () => context.push('/profile/edit'),
                   ),
                   _SettingsItem(
                     icon: Icons.notifications_outlined,
