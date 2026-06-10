@@ -11,6 +11,60 @@ class _Faq {
   const _Faq({required this.question, required this.answer});
 }
 
+const _faqs = [
+  _Faq(
+    question: 'How do I submit a new ticket?',
+    answer:
+        'Tap the "Tickets" tab at the bottom of the screen, then press the + button '
+        'in the top right. Fill in the 3-step form — Ticket Info, Details, and '
+        'then attach any supporting files before submitting.',
+  ),
+  _Faq(
+    question: 'How long does it take to get a response?',
+    answer:
+        'Most tickets are reviewed within 3 – 5 working days. High-priority tickets '
+        'are typically addressed sooner. You will receive a push notification when '
+        'an officer is assigned or replies to your ticket.',
+  ),
+  _Faq(
+    question: 'Can I edit a ticket after submitting it?',
+    answer:
+        'Once submitted, ticket details cannot be directly edited. You can, however, '
+        'add additional context or attachments through the Conversation thread on the '
+        'ticket detail page.',
+  ),
+  _Faq(
+    question: 'What do the different ticket statuses mean?',
+    answer:
+        'Open — Your ticket has been received and is waiting to be reviewed.\n'
+        'In Review — An officer is actively looking into your request.\n'
+        'Waiting — We are waiting for additional information from you.\n'
+        'Resolved — Your request has been addressed.\n'
+        'Closed — The ticket has been formally closed.',
+  ),
+  _Faq(
+    question: 'How do I upload attachments?',
+    answer:
+        'You can attach files when creating a ticket (Step 3 of the form). '
+        'A maximum of 5 files, each up to 10 MB, are supported. Common file types '
+        'such as PDF, JPG, PNG, and DOCX are accepted.',
+  ),
+  _Faq(
+    question: 'I forgot my password. What should I do?',
+    answer:
+        'On the login screen, tap "Forgot password?" and enter your registered email '
+        'address. A password reset link will be sent to your inbox. If you do not '
+        'receive the email within a few minutes, check your spam folder.',
+  ),
+  _Faq(
+    question: 'How do I turn off notifications?',
+    answer:
+        'Go to Profile → Notifications to manage your notification preferences. '
+        'You can toggle individual notification types or disable all push '
+        'notifications from the master switch at the top.',
+  ),
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
