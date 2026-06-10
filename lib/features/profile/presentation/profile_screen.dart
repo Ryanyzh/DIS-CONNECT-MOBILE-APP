@@ -110,11 +110,6 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () => context.push('/profile/edit'),
                   ),
                   _SettingsItem(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notifications',
-                    onTap: () {},
-                  ),
-                  _SettingsItem(
                     icon: Icons.lock_outline,
                     label: 'Change Password',
                     onTap: () => context.push('/profile/change-password'),

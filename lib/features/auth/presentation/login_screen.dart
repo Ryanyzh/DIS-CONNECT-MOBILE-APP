@@ -158,24 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _isLoading
-                                ? null
-                                : () {
-                                    // TODO: connect forgot password flow
-                                  },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              foregroundColor: AppColors.positiveDeep,
-                            ),
-                            child: const Text('Forgot password?'),
-                          ),
-                        ),
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 12),
                           Container(
