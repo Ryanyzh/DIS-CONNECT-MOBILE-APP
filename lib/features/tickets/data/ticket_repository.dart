@@ -28,7 +28,7 @@ class TicketRepository {
       'category_id': categoryId,
       'source': 'mobile',
       if (description != null && description.isNotEmpty) 'description': description,
-      'priority_id': ?priorityId,
+      ?'priority_id': priorityId,
       if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
     };
     final response = await apiClient.post('/api/v1/tickets', body);
