@@ -35,6 +35,25 @@ class TicketRepository {
     return response as Map<String, dynamic>;
   }
 
+  Future<List<Map<String, dynamic>>> getMessages(String ticketId) async {
+    final response =
+        await apiClient.get('/api/v1/tickets/$ticketId/messages') as Map<String, dynamic>;
+    return (response['messages'] as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> sendMessage(String ticketId, String messageText) async {
+    await apiClient.post(
+      '/api/v1/tickets/$ticketId/messages',
+      {'message_text': messageText},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getHistory(String ticketId) async {
+    final response =
+        await apiClient.get('/api/v1/tickets/$ticketId/history') as Map<String, dynamic>;
+    return (response['history'] as List).cast<Map<String, dynamic>>();
+  }
+
   Future<void> createAttachment({
     required String ticketId,
     required String fileName,

@@ -1,86 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Stub data
+// Model
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HistoryEntry {
+  final String actionId;
   final String action;
-  final String? detail;
+  final String detail;
   final String actorName;
   final DateTime timestamp;
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
 
   const _HistoryEntry({
+    required this.actionId,
     required this.action,
-    this.detail,
+    required this.detail,
     required this.actorName,
     required this.timestamp,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
   });
+
+  factory _HistoryEntry.fromJson(Map<String, dynamic> json) {
+    return _HistoryEntry(
+      actionId: json['action_id'] as String? ?? '',
+      action: json['action_type'] as String? ?? 'Update',
+      detail: json['message'] as String? ?? '',
+      actorName: json['officer_name'] as String? ?? 'System',
+      timestamp:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+    );
+  }
 }
 
-final _stubHistory = [
-  _HistoryEntry(
-    action: 'Ticket Created',
-    detail: 'Submitted via Mobile App',
-    actorName: 'You',
-    timestamp: DateTime(2024, 9, 10, 9, 0),
-    icon: Icons.add_circle_outline_rounded,
-    iconColor: Color(0xFF7C3AED),
-    iconBg: Color(0xFFEDE9FE),
-  ),
-  _HistoryEntry(
-    action: 'Status Changed',
-    detail: 'Open → In Review',
-    actorName: 'Eileen (Scholarship Admin)',
-    timestamp: DateTime(2024, 9, 10, 10, 15),
-    icon: Icons.swap_horiz_rounded,
-    iconColor: Color(0xFF2563EB),
-    iconBg: Color(0xFFDBEAFE),
-  ),
-  _HistoryEntry(
-    action: 'Ticket Assigned',
-    detail: 'Assigned to Eileen (Scholarship Admin)',
-    actorName: 'System',
-    timestamp: DateTime(2024, 9, 10, 10, 15),
-    icon: Icons.person_add_outlined,
-    iconColor: Color(0xFF059669),
-    iconBg: Color(0xFFD1FAE5),
-  ),
-  _HistoryEntry(
-    action: 'Comment Added',
-    detail: 'Requested supporting documents',
-    actorName: 'Eileen (Scholarship Admin)',
-    timestamp: DateTime(2024, 9, 10, 10, 30),
-    icon: Icons.chat_bubble_outline_rounded,
-    iconColor: Color(0xFF6366F1),
-    iconBg: Color(0xFFE0E7FF),
-  ),
-  _HistoryEntry(
-    action: 'Attachment Added',
-    detail: 'flight_ticket.pdf, invoice.pdf',
-    actorName: 'You',
-    timestamp: DateTime(2024, 9, 10, 11, 5),
-    icon: Icons.attach_file_rounded,
-    iconColor: Color(0xFFEA580C),
-    iconBg: Color(0xFFFFEDD5),
-  ),
-];
+// Maps an action_type string to icon + colors
+({IconData icon, Color iconColor, Color iconBg}) _styleFor(String action) {
+  switch (action) {
+    case 'assignment':
+      return (
+        icon: Icons.person_add_outlined,
+        iconColor: const Color(0xFF059669),
+        iconBg: const Color(0xFFD1FAE5),
+      );
+    case 'Escalated':
+      return (
+        icon: Icons.warning_amber_rounded,
+        iconColor: const Color(0xFFEA580C),
+        iconBg: const Color(0xFFFFEDD5),
+      );
+    case 'Resolved':
+      return (
+        icon: Icons.check_circle_outline_rounded,
+        iconColor: const Color(0xFF10B981),
+        iconBg: const Color(0xFFD1FAE5),
+      );
+    case 'Closed':
+      return (
+        icon: Icons.lock_outline,
+        iconColor: const Color(0xFF475569),
+        iconBg: const Color(0xFFF1F5F9),
+      );
+    case 'Open':
+      return (
+        icon: Icons.add_circle_outline_rounded,
+        iconColor: const Color(0xFF7C3AED),
+        iconBg: const Color(0xFFEDE9FE),
+      );
+    default:
+      return (
+        icon: Icons.swap_horiz_rounded,
+        iconColor: const Color(0xFF2563EB),
+        iconBg: const Color(0xFFDBEAFE),
+      );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-class TicketHistoryScreen extends StatelessWidget {
+class TicketHistoryScreen extends StatefulWidget {
   final String ticketId;
   const TicketHistoryScreen({super.key, required this.ticketId});
+
+  @override
+  State<TicketHistoryScreen> createState() => _TicketHistoryScreenState();
+}
+
+class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
+  List<_HistoryEntry> _history = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final raw = await TicketRepository(ApiClient()).getHistory(widget.ticketId);
+      if (mounted) {
+        setState(() {
+          _history = raw.map(_HistoryEntry.fromJson).toList();
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load ticket history: $e');
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,14 +138,23 @@ class TicketHistoryScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        itemCount: _stubHistory.length,
-        itemBuilder: (_, i) => _HistoryTile(
-          entry: _stubHistory[i],
-          isLast: i == _stubHistory.length - 1,
-        ),
-      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _history.isEmpty
+          ? const Center(
+              child: Text(
+                'No history yet.',
+                style: TextStyle(color: Color(0xFF94A3B8)),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              itemCount: _history.length,
+              itemBuilder: (_, i) => _HistoryTile(
+                entry: _history[i],
+                isLast: i == _history.length - 1,
+              ),
+            ),
     );
   }
 }
@@ -128,6 +170,8 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = _styleFor(entry.action);
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,10 +185,10 @@ class _HistoryTile extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: entry.iconBg,
+                    color: style.iconBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(entry.icon, color: entry.iconColor, size: 18),
+                  child: Icon(style.icon, color: style.iconColor, size: 18),
                 ),
                 if (!isLast)
                   Expanded(
@@ -177,10 +221,10 @@ class _HistoryTile extends StatelessWidget {
                       color: AppColors.ink,
                     ),
                   ),
-                  if (entry.detail != null) ...[
+                  if (entry.detail.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      entry.detail!,
+                      entry.detail,
                       style: AppTypography.caption.copyWith(
                         color: AppColors.body,
                       ),
@@ -208,9 +252,7 @@ class _HistoryTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        DateFormat(
-                          'd MMM yyyy, h:mm a',
-                        ).format(entry.timestamp),
+                        DateFormat('d MMM yyyy, h:mm a').format(entry.timestamp),
                         style: AppTypography.caption,
                       ),
                     ],
