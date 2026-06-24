@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/announcements/data/announcement_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data model
@@ -29,6 +31,24 @@ class AnnouncementEntry {
     this.category = 'General',
     this.tags = const [],
   });
+
+  factory AnnouncementEntry.fromJson(Map<String, dynamic> json) {
+    return AnnouncementEntry(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      date: _parseDate(json['date']),
+      author: json['author'] as String? ?? 'Scholarship Office',
+      authorRole: json['authorRole'] as String? ?? 'Administration',
+      category: json['category'] as String? ?? 'General',
+      tags: (json['tags'] as List?)?.cast<String>() ?? const [],
+    );
+  }
+
+  static DateTime _parseDate(dynamic raw) {
+    if (raw is String) return DateTime.tryParse(raw) ?? DateTime.now();
+    return DateTime.now();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -97,177 +117,102 @@ AnnouncementCategoryStyle announcementCategoryStyle(String category) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sample data (replace with repository calls)
-// ─────────────────────────────────────────────────────────────────────────────
-
-final announcementsList = <AnnouncementEntry>[
-  AnnouncementEntry(
-    id: 'ann-001',
-    title: 'Overseas Exchange Briefing for May 2024',
-    date: DateTime(2024, 5, 15, 10, 30),
-    author: 'Ms. Rachel Tan',
-    authorRole: 'Exchange Programme Coordinator',
-    category: 'Event',
-    tags: ['Exchange', 'Mandatory', 'May 2024'],
-    body: '''Dear Scholars,
-
-We would like to invite all scholars who are planning to participate in the Overseas Exchange Programme for the upcoming academic semester to attend a mandatory briefing session.
-
-This briefing will cover the full application process, programme timeline, financial support available, and documentation required for your exchange application.
-
-Date & Time: 15 May 2024, 10:30 AM
-Venue: Seminar Room 3, Administration Block
-Duration: Approximately 90 minutes
-
-All scholars are strongly encouraged to attend as attendance will be recorded. If you are unable to attend, please notify your scholarship coordinator at least 48 hours in advance with a valid reason.
-
-Please bring along your student card and the pre-briefing checklist that was sent to your registered email address.
-
-For any queries, please contact the Scholarship Office at scholarship@dis-connect.sg or submit a support ticket through the DisConnect portal.
-
-We look forward to seeing you there.''',
-  ),
-  AnnouncementEntry(
-    id: 'ann-002',
-    title: 'Internship Declaration Submission Deadline',
-    date: DateTime(2024, 5, 20, 9, 0),
-    author: 'Mr. David Lim',
-    authorRole: 'Internship & Career Office',
-    category: 'Deadline',
-    tags: ['Internship', 'Deadline', 'Declaration'],
-    body: '''Attention Scholars,
-
-This is an important reminder that the Internship Declaration Form submission deadline is fast approaching. All scholars who are currently on an internship or have completed one in the current semester are required to submit their declaration.
-
-Submission Deadline: 20 May 2024, 11:59 PM
-Form: Available via DisConnect → Create Ticket → Category: Internship
-
-Please ensure the following documents are attached with your submission:
-• Internship offer letter or acceptance email
-• Company registration details
-• Supervisor's name and contact information
-• Completed weekly log (where applicable)
-
-Scholars who fail to submit by the stated deadline may have their scholarship allowance withheld pending receipt and approval of the declaration.
-
-If you encounter any difficulties with the submission process, please raise a support ticket immediately so our team can assist you in time.
-
-Do not delay — late submissions will not be accepted without prior approval.''',
-  ),
-  AnnouncementEntry(
-    id: 'ann-003',
-    title: 'Scholarship Results Released',
-    date: DateTime(2024, 5, 22, 14, 0),
-    author: 'Scholarship Office',
-    authorRole: 'Administration',
-    category: 'Result',
-    tags: ['Scholarship', 'Results', 'Renewal'],
-    body: '''Dear Scholars,
-
-We are pleased to announce that the results for the Annual Scholarship Review have been released. You may view your updated scholarship status by navigating to your Profile in the DisConnect app.
-
-We warmly congratulate all scholars who have maintained their academic standing and are eligible for scholarship renewal. Your continued dedication is truly commendable.
-
-For scholars whose applications for renewal were reviewed this cycle, individual outcome letters have been sent to your registered email addresses. Please check your inbox and spam folder if you have not received your letter.
-
-Next Steps:
-• If renewed — no action required. Allowance disbursement will proceed as scheduled.
-• If conditionally renewed — please follow the instructions in your outcome letter within 14 days.
-• If not renewed — you are welcome to appeal within 21 days of this announcement.
-
-If you have any questions regarding your scholarship status or the review outcome, please submit a ticket via the DisConnect portal and our team will respond within 3 – 5 business days.
-
-The scholarship team wishes you all the very best in your continued academic journey.''',
-  ),
-  AnnouncementEntry(
-    id: 'ann-004',
-    title: 'Scheduled System Maintenance — 25 May 2024',
-    date: DateTime(2024, 5, 25, 23, 0),
-    author: 'DisConnect Tech Team',
-    authorRole: 'Platform Support',
-    category: 'Maintenance',
-    tags: ['System', 'Downtime', 'Maintenance'],
-    body: '''Dear Users,
-
-Please be informed that scheduled maintenance will be carried out on the DisConnect platform to improve system performance and deploy critical security updates.
-
-Maintenance Window:
-Start: 25 May 2024, 11:00 PM (SGT)
-End: 26 May 2024, 3:00 AM (SGT) (estimated)
-
-Services Affected:
-• Ticket submission and status updates
-• File uploads and downloads
-• User authentication (login / logout)
-• Push notifications may be delayed
-
-Read-only access to your existing tickets and profile information may also be affected intermittently during this window.
-
-We strongly advise all users to complete any pending submissions before the maintenance window begins. Any tickets submitted close to or during the maintenance period may not be processed until after the maintenance is complete.
-
-We apologise for any inconvenience this may cause and appreciate your patience and understanding.
-
-If you experience any issues after the maintenance window has passed, please contact support at support@dis-connect.sg.''',
-  ),
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
-class AnnouncementsScreen extends StatelessWidget {
+class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
 
   @override
+  State<AnnouncementsScreen> createState() => _AnnouncementsScreenState();
+}
+
+class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
+  List<AnnouncementEntry> _announcements = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final entries =
+          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      if (mounted) {
+        setState(() {
+          _announcements = entries;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load announcements: $e');
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sorted = [...announcementsList]
-      ..sort((a, b) {
-        return b.date.compareTo(a.date);
-      });
+    final sorted = [..._announcements]
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // ── App bar ─────────────────────────────────────────────────
-            SliverAppBar(
-              backgroundColor: const Color(0xFFF8FAFC),
-              elevation: 0,
-              scrolledUnderElevation: 1,
-              shadowColor: Colors.black.withValues(alpha: 0.06),
-              automaticallyImplyLeading: false,
-              title: Text(
-                'Announcements',
-                style: AppTypography.bodyMd.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.ink,
-                  fontSize: 18,
-                ),
-              ),
-              centerTitle: false,
-            ),
-
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _AnnouncementCard(
-                      entry: sorted[i],
-                      onTap: () => context.push(
-                        '/announcements/${sorted[i].id}',
-                        extra: sorted[i],
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : CustomScrollView(
+                slivers: [
+                  // ── App bar ───────────────────────────────────────────
+                  SliverAppBar(
+                    backgroundColor: const Color(0xFFF8FAFC),
+                    elevation: 0,
+                    scrolledUnderElevation: 1,
+                    shadowColor: Colors.black.withValues(alpha: 0.06),
+                    automaticallyImplyLeading: false,
+                    title: Text(
+                      'Announcements',
+                      style: AppTypography.bodyMd.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.ink,
+                        fontSize: 18,
                       ),
                     ),
+                    centerTitle: false,
                   ),
-                  childCount: sorted.length,
-                ),
+
+                  if (sorted.isEmpty)
+                    const SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          'No announcements yet.',
+                          style: TextStyle(color: Color(0xFF94A3B8)),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _AnnouncementCard(
+                              entry: sorted[i],
+                              onTap: () => context.push(
+                                '/announcements/${sorted[i].id}',
+                                extra: sorted[i],
+                              ),
+                            ),
+                          ),
+                          childCount: sorted.length,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

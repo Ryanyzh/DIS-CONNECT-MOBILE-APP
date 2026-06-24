@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/announcements/data/announcement_repository.dart';
 import 'package:disconnect_mobile/features/announcements/presentation/announcements_screen.dart';
 
-class AnnouncementDetailScreen extends StatelessWidget {
+class AnnouncementDetailScreen extends StatefulWidget {
   final String announcementId;
 
   const AnnouncementDetailScreen({super.key, required this.announcementId});
 
-  // ── Resolve entry ─────────────────────────────────────────────────────────
-  AnnouncementEntry? _resolve(BuildContext context) {
-    final extra = GoRouterState.of(context).extra as AnnouncementEntry?;
-    if (extra != null) return extra;
-    try {
-      return announcementsList.firstWhere((e) => e.id == announcementId);
-    } catch (_) {
-      return null;
-    }
-  }
+  @override
+  State<AnnouncementDetailScreen> createState() =>
+      _AnnouncementDetailScreenState();
+}
+
+class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
+  AnnouncementEntry? _entry;
+  bool _loading = false;
 
   // ── Reading time ──────────────────────────────────────────────────────────
   String _readingTime(String text) {
@@ -37,10 +37,32 @@ class AnnouncementDetailScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final entry = _resolve(context);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fast path: entry was passed via GoRouter extra (from list tap)
+    final extra = GoRouterState.of(context).extra;
+    if (extra is AnnouncementEntry) {
+      _entry = extra;
+      return;
+    }
+    // Slow path: deep link or home banner — fetch from API
+    if (_entry == null && !_loading) {
+      _loading = true;
+      AnnouncementRepository(ApiClient())
+          .getAnnouncementById(widget.announcementId)
+          .then((entry) {
+            if (mounted) setState(() { _entry = entry; _loading = false; });
+          })
+          .catchError((e) {
+            debugPrint('Failed to load announcement: $e');
+            if (mounted) setState(() => _loading = false);
+          });
+    }
+  }
 
-    if (entry == null) {
+  @override
+  Widget build(BuildContext context) {
+    if (_entry == null) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -50,9 +72,13 @@ class AnnouncementDetailScreen extends StatelessWidget {
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
-        body: const Center(child: Text('Announcement not found.')),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : const Center(child: Text('Announcement not found.')),
       );
     }
+
+    final entry = _entry!;
 
     final style = announcementCategoryStyle(entry.category);
     final readTime = _readingTime(entry.body);

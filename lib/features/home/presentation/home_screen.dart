@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/announcements/data/announcement_repository.dart';
+import 'package:disconnect_mobile/features/announcements/presentation/announcements_screen.dart';
 import 'package:disconnect_mobile/features/home/widgets/greeting_header.dart';
 import 'package:disconnect_mobile/features/home/widgets/quick_actions_section.dart';
 import 'package:disconnect_mobile/features/home/widgets/overview_stats_card.dart';
@@ -7,9 +10,14 @@ import 'package:disconnect_mobile/features/home/widgets/recent_tickets_section.d
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
 import 'package:disconnect_mobile/features/home/widgets/announcement_banner.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   static const TicketOverview _overview = TicketOverview(
     inReview: 3,
     waiting: 2,
@@ -17,9 +25,7 @@ class HomeScreen extends StatelessWidget {
     closed: 1,
   );
 
-  // ---------------------------------------------------------------------------
-  // Sample data — replace with real repository calls when the backend is ready
-  // ---------------------------------------------------------------------------
+  // Sample data — tickets section still uses mock until that feature is wired
   static final List<Ticket> _recentTickets = [
     Ticket(
       id: '1',
@@ -50,15 +56,41 @@ class HomeScreen extends StatelessWidget {
     ),
   ];
 
-  // ---------------------------------------------------------------------------
+  AnnouncementEntry? _latestAnnouncement;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestAnnouncement();
+  }
+
+  Future<void> _loadLatestAnnouncement() async {
+    try {
+      final entries =
+          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      if (entries.isNotEmpty && mounted) {
+        entries.sort((a, b) => b.date.compareTo(a.date));
+        setState(() => _latestAnnouncement = entries.first);
+      }
+    } catch (e) {
+      debugPrint('Failed to load latest announcement: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final announcement = AnnouncementItem(
-      title: 'Overseas Exchange Briefing for May 2024',
-      date: DateTime(2024, 5, 15, 10, 30),
-      onTap: () => context.go('/announcements'),
-    );
+    final ann = _latestAnnouncement;
+    final announcement = ann != null
+        ? AnnouncementItem(
+            title: ann.title,
+            date: ann.date,
+            onTap: () => context.push('/announcements/${ann.id}', extra: ann),
+          )
+        : AnnouncementItem(
+            title: 'Check out the latest announcements',
+            date: DateTime.now(),
+            onTap: () => context.go('/announcements'),
+          );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
