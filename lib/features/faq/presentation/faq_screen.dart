@@ -123,7 +123,150 @@ class _FaqScreenState extends State<FaqScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(),
+      body: Column(
+        children: [
+          // ── Search bar ──────────────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _search = v),
+              style: AppTypography.bodySm.copyWith(color: AppColors.ink),
+              decoration: InputDecoration(
+                hintText: 'Search FAQs…',
+                hintStyle: AppTypography.bodySm.copyWith(color: AppColors.mute),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: AppColors.mute,
+                ),
+                suffixIcon: _search.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          size: 18,
+                          color: AppColors.mute,
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _search = '');
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+
+          // ── Category chips ──────────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: _categories.map((cat) {
+                  final isActive = _activeCategory == cat;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeCategory = cat),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive ? AppColors.ink : Colors.white,
+                          border: Border.all(
+                            color: isActive
+                                ? AppColors.ink
+                                : const Color(0xFFE2E8F0),
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppBorderRadius.wisePill,
+                          ),
+                        ),
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isActive ? Colors.white : AppColors.body,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+
+          // ── Body ────────────────────────────────────────────────────────
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                ? Center(
+                    child: Text(
+                      _error!,
+                      style: AppTypography.bodySm.copyWith(
+                        color: AppColors.negative,
+                      ),
+                    ),
+                  )
+                : _filtered.isEmpty
+                ? Center(
+                    child: Text(
+                      'No FAQs found.',
+                      style: AppTypography.bodySm.copyWith(
+                        color: AppColors.mute,
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+                    children: [
+                      // When searching, show flat list; otherwise group by category
+                      if (_search.isNotEmpty || _activeCategory != 'All')
+                        _FaqGroup(
+                          faqs: _filtered
+                            ..sort((a, b) => a.order.compareTo(b.order)),
+                          showCategoryBadge: _activeCategory == 'All',
+                        )
+                      else
+                        ..._grouped.entries.map(
+                          (entry) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _CategoryHeader(category: entry.key),
+                                const SizedBox(height: 8),
+                                _FaqGroup(
+                                  faqs: entry.value,
+                                  showCategoryBadge: false,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
