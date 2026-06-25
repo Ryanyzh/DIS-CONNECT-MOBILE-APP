@@ -9,76 +9,20 @@ import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// IDs come from seeded backend data — replace with a fetch from
-// /api/v1/categories and /api/v1/priorities when those endpoints exist.
-// ─────────────────────────────────────────────────────────────────────────────
-const _categories = [
-  _Category(
-    'Reimbursement',
-    Icons.receipt_long_outlined,
-    '503b3a9a-fc71-5c51-83b9-f24ddf9725dc',
-  ),
-  _Category(
-    'Internship',
-    Icons.work_outline,
-    '2d267226-a9d7-50f9-a6f6-c36ebee38261',
-  ),
-  _Category(
-    'Scholarship',
-    Icons.school_outlined,
-    'b149db0c-ce44-5ee7-8565-21a65c4891b3',
-  ),
-  _Category(
-    'Leave',
-    Icons.calendar_today_outlined,
-    '50739be1-ff48-5fe4-8704-a31a47df2558',
-  ),
-  _Category(
-    'Exchange',
-    Icons.flight_outlined,
-    '9d250fae-12f8-5a62-b383-11434111cf6c',
-  ),
-  _Category(
-    'Policy',
-    Icons.policy_outlined,
-    '4308c61a-353f-5c6c-b09c-830cbe0cb101',
-  ),
-];
+// ── Category / Priority models ────────────────────────────────────────────────
 
 class _Category {
   final String label;
   final IconData icon;
   final String id;
   const _Category(this.label, this.icon, this.id);
-}
 
-const _priorities = [
-  _Priority(
-    'Low',
-    Icons.arrow_downward_rounded,
-    Color(0xFF22C55E),
-    'c17adf18-56fb-5686-84ba-52a3c37ea9e1',
-  ),
-  _Priority(
-    'Medium',
-    Icons.remove_rounded,
-    Color(0xFFF59E0B),
-    '420abc47-82f8-5267-acc2-737d0ed0739b',
-  ),
-  _Priority(
-    'High',
-    Icons.arrow_upward_rounded,
-    Color(0xFFEF4444),
-    'f1b9f4e8-4723-50b5-92ae-ddd8d5b929db',
-  ),
-  _Priority(
-    'Critical',
-    Icons.priority_high_rounded,
-    Color(0xFF7C3AED),
-    '871d40f6-a662-5c2b-92b4-1258a23ae40a',
-  ),
-];
+  factory _Category.fromJson(Map<String, dynamic> json) => _Category(
+        json['category_name'] as String? ?? '',
+        _iconForCategory(json['category_name'] as String? ?? ''),
+        json['category_id'] as String? ?? '',
+      );
+}
 
 class _Priority {
   final String label;
@@ -86,6 +30,52 @@ class _Priority {
   final Color color;
   final String id;
   const _Priority(this.label, this.icon, this.color, this.id);
+
+  factory _Priority.fromJson(Map<String, dynamic> json) => _Priority(
+        json['priority_name'] as String? ?? '',
+        _iconForPriority(json['priority_name'] as String? ?? ''),
+        _parseHexColor(json['color_code'] as String? ?? '#94A3B8'),
+        json['priority_id'] as String? ?? '',
+      );
+}
+
+IconData _iconForCategory(String name) {
+  switch (name) {
+    case 'Reimbursement':
+      return Icons.receipt_long_outlined;
+    case 'Internship':
+      return Icons.work_outline;
+    case 'Scholarship':
+      return Icons.school_outlined;
+    case 'Leave':
+      return Icons.calendar_today_outlined;
+    case 'Exchange':
+      return Icons.flight_outlined;
+    case 'Policy':
+      return Icons.policy_outlined;
+    default:
+      return Icons.category_outlined;
+  }
+}
+
+IconData _iconForPriority(String name) {
+  switch (name) {
+    case 'Low':
+      return Icons.arrow_downward_rounded;
+    case 'Medium':
+      return Icons.remove_rounded;
+    case 'High':
+      return Icons.arrow_upward_rounded;
+    case 'Critical':
+      return Icons.priority_high_rounded;
+    default:
+      return Icons.flag_outlined;
+  }
+}
+
+Color _parseHexColor(String hex) {
+  final clean = hex.replaceAll('#', '');
+  return Color(int.parse('FF$clean', radix: 16));
 }
 
 class _AttachedFile {
@@ -126,16 +116,18 @@ String _mimeFromExtension(String ext) {
 IconData _fileIcon(String mimeType) {
   if (mimeType.startsWith('image/')) return Icons.image_outlined;
   if (mimeType == 'application/pdf') return Icons.picture_as_pdf_outlined;
-  if (mimeType.contains('sheet') || mimeType.contains('excel'))
+  if (mimeType.contains('sheet') || mimeType.contains('excel')) {
     return Icons.table_chart_outlined;
+  }
   return Icons.description_outlined;
 }
 
 Color _fileIconColor(String mimeType) {
   if (mimeType.startsWith('image/')) return const Color(0xFF3B82F6);
   if (mimeType == 'application/pdf') return const Color(0xFFEF4444);
-  if (mimeType.contains('sheet') || mimeType.contains('excel'))
+  if (mimeType.contains('sheet') || mimeType.contains('excel')) {
     return const Color(0xFF22C55E);
+  }
   return const Color(0xFF6366F1);
 }
 
@@ -155,6 +147,11 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   late final PageController _pageController;
   int _currentStep = 0; // 0-indexed
+
+  // ── Lookup state ─────────────────────────────────────────────────────────
+  List<_Category> _categories = [];
+  List<_Priority> _priorities = [];
+  bool _loadingLookups = true;
 
   // ── Step 1 state ─────────────────────────────────────────────────────────
   final _subjectController = TextEditingController();
@@ -176,6 +173,25 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    _loadLookups();
+  }
+
+  Future<void> _loadLookups() async {
+    try {
+      final repo = TicketRepository(ApiClient());
+      final results = await Future.wait([repo.getCategories(), repo.getPriorities()]);
+      if (mounted) {
+        setState(() {
+          _categories = results[0].map(_Category.fromJson).toList();
+          _priorities = results[1].map(_Priority.fromJson).toList();
+          _loadingLookups = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingLookups = false);
+      }
+    }
   }
 
   @override
@@ -301,6 +317,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         ),
       ),
       builder: (_) => _CategorySheet(
+        categories: _categories,
         selected: _selectedCategory,
         onSelect: (c) {
           setState(() => _selectedCategory = c);
@@ -447,6 +464,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   // ─────────────────────────────────────────────────────────────────────────
 
   Widget _buildStep1() {
+    if (_loadingLookups) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       child: Column(
@@ -488,6 +508,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 10),
           _PrioritySelector(
+            priorities: _priorities,
             selected: _selectedPriority,
             onSelect: (p) => setState(() => _selectedPriority = p),
           ),
@@ -1028,9 +1049,14 @@ class _CategoryDropdown extends StatelessWidget {
 }
 
 class _CategorySheet extends StatelessWidget {
+  final List<_Category> categories;
   final _Category? selected;
   final ValueChanged<_Category> onSelect;
-  const _CategorySheet({required this.selected, required this.onSelect});
+  const _CategorySheet({
+    required this.categories,
+    required this.selected,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1048,7 +1074,7 @@ class _CategorySheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ..._categories.map(
+          ...categories.map(
             (c) => ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
@@ -1080,18 +1106,26 @@ class _CategorySheet extends StatelessWidget {
 }
 
 class _PrioritySelector extends StatelessWidget {
+  final List<_Priority> priorities;
   final _Priority? selected;
   final ValueChanged<_Priority> onSelect;
-  const _PrioritySelector({required this.selected, required this.onSelect});
+  const _PrioritySelector({
+    required this.priorities,
+    required this.selected,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (priorities.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Row(
-      children: _priorities.map((p) {
+      children: priorities.map((p) {
         final isSelected = selected?.label == p.label;
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: p == _priorities.last ? 0 : 8),
+            padding: EdgeInsets.only(right: p == priorities.last ? 0 : 8),
             child: GestureDetector(
               onTap: () => onSelect(p),
               child: AnimatedContainer(

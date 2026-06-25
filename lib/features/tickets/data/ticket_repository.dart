@@ -40,6 +40,16 @@ class TicketRepository {
     return response.cast<Map<String, dynamic>>();
   }
 
+  Future<List<Map<String, dynamic>>> getCategories() async {
+    final response = await apiClient.get('/api/v1/categories') as List;
+    return response.cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> getPriorities() async {
+    final response = await apiClient.get('/api/v1/priorities') as List;
+    return response.cast<Map<String, dynamic>>();
+  }
+
   Future<void> updateTicketStatus(
     String ticketId,
     String statusId, {
