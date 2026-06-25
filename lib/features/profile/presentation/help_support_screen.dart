@@ -1,76 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
+import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/features/faq/data/faq_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Data
-// ─────────────────────────────────────────────────────────────────────────────
+class HelpSupportScreen extends StatefulWidget {
+  const HelpSupportScreen({super.key});
 
-class _Faq {
-  final String question;
-  final String answer;
-  const _Faq({required this.question, required this.answer});
+  @override
+  State<HelpSupportScreen> createState() => _HelpSupportScreenState();
 }
 
-const _faqs = [
-  _Faq(
-    question: 'How do I submit a new ticket?',
-    answer:
-        'Tap the "Tickets" tab at the bottom of the screen, then press the + button '
-        'in the top right. Fill in the 3-step form — Ticket Info, Details, and '
-        'then attach any supporting files before submitting.',
-  ),
-  _Faq(
-    question: 'How long does it take to get a response?',
-    answer:
-        'Most tickets are reviewed within 3 – 5 working days. High-priority tickets '
-        'are typically addressed sooner. You will receive a push notification when '
-        'an officer is assigned or replies to your ticket.',
-  ),
-  _Faq(
-    question: 'Can I edit a ticket after submitting it?',
-    answer:
-        'Once submitted, ticket details cannot be directly edited. You can, however, '
-        'add additional context or attachments through the Conversation thread on the '
-        'ticket detail page.',
-  ),
-  _Faq(
-    question: 'What do the different ticket statuses mean?',
-    answer:
-        'Open — Your ticket has been received and is waiting to be reviewed.\n'
-        'In Review — An officer is actively looking into your request.\n'
-        'Waiting — We are waiting for additional information from you.\n'
-        'Resolved — Your request has been addressed.\n'
-        'Closed — The ticket has been formally closed.',
-  ),
-  _Faq(
-    question: 'How do I upload attachments?',
-    answer:
-        'You can attach files when creating a ticket (Step 3 of the form). '
-        'A maximum of 5 files, each up to 10 MB, are supported. Common file types '
-        'such as PDF, JPG, PNG, and DOCX are accepted.',
-  ),
-  _Faq(
-    question: 'I forgot my password. What should I do?',
-    answer:
-        'On the login screen, tap "Forgot password?" and enter your registered email '
-        'address. A password reset link will be sent to your inbox. If you do not '
-        'receive the email within a few minutes, check your spam folder.',
-  ),
-  _Faq(
-    question: 'How do I turn off notifications?',
-    answer:
-        'Go to Profile → Notifications to manage your notification preferences. '
-        'You can toggle individual notification types or disable all push '
-        'notifications from the master switch at the top.',
-  ),
-];
+class _HelpSupportScreenState extends State<HelpSupportScreen> {
+  List<FaqEntry> _faqs = [];
+  bool _loadingFaqs = true;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Screen
-// ─────────────────────────────────────────────────────────────────────────────
-
-class HelpSupportScreen extends StatelessWidget {
-  const HelpSupportScreen({super.key});
+  @override
+  void initState() {
+    super.initState();
+    FaqRepository(ApiClient()).getFaqs().then((faqs) {
+      if (mounted) setState(() { _faqs = faqs.take(4).toList(); _loadingFaqs = false; });
+    }).catchError((_) {
+      if (mounted) setState(() => _loadingFaqs = false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,11 +64,7 @@ class HelpSupportScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.support_agent_rounded,
-                  size: 40,
-                  color: Colors.white,
-                ),
+                const Icon(Icons.support_agent_rounded, size: 40, color: Colors.white),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -145,13 +94,62 @@ class HelpSupportScreen extends StatelessWidget {
           const SizedBox(height: 28),
 
           // ── FAQ ───────────────────────────────────────────────────────
-          _SectionLabel(label: 'FREQUENTLY ASKED QUESTIONS'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const _SectionLabel(label: 'FREQUENTLY ASKED QUESTIONS'),
+              GestureDetector(
+                onTap: () => context.push('/faqs'),
+                child: Text(
+                  'View all',
+                  style: AppTypography.caption.copyWith(
+                    color: const Color(0xFF4338CA),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
-          _FaqCard(faqs: _faqs),
+          if (_loadingFaqs)
+            Container(
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            )
+          else if (_faqs.isEmpty)
+            GestureDetector(
+              onTap: () => context.push('/faqs'),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Browse all FAQs →',
+                  style: AppTypography.bodySm.copyWith(
+                    color: const Color(0xFF4338CA),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            )
+          else
+            _FaqCard(
+              faqs: _faqs,
+              onViewAll: () => context.push('/faqs'),
+            ),
           const SizedBox(height: 28),
 
           // ── Contact ───────────────────────────────────────────────────
-          _SectionLabel(label: 'CONTACT SUPPORT'),
+          const _SectionLabel(label: 'CONTACT SUPPORT'),
           const SizedBox(height: 10),
           _ContactCard(
             items: [
@@ -179,7 +177,7 @@ class HelpSupportScreen extends StatelessWidget {
           const SizedBox(height: 28),
 
           // ── Quick tips ────────────────────────────────────────────────
-          _SectionLabel(label: 'QUICK TIPS'),
+          const _SectionLabel(label: 'QUICK TIPS'),
           const SizedBox(height: 10),
           _TipsCard(
             tips: const [
@@ -218,8 +216,9 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _FaqCard extends StatelessWidget {
-  final List<_Faq> faqs;
-  const _FaqCard({required this.faqs});
+  final List<FaqEntry> faqs;
+  final VoidCallback onViewAll;
+  const _FaqCard({required this.faqs, required this.onViewAll});
 
   @override
   Widget build(BuildContext context) {
@@ -232,64 +231,94 @@ class _FaqCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
         child: Column(
-          children: faqs.asMap().entries.map((e) {
-            final isLast = e.key == faqs.length - 1;
-            return Column(
-              children: [
-                Theme(
-                  data: Theme.of(
-                    context,
-                  ).copyWith(dividerColor: Colors.transparent),
-                  child: ExpansionTile(
-                    tilePadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
-                    ),
-                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                    leading: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEDE9FE),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.help_outline_rounded,
-                        size: 14,
-                        color: Color(0xFF7C3AED),
-                      ),
-                    ),
-                    title: Text(
-                      e.value.question,
-                      style: AppTypography.bodySm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    iconColor: AppColors.mute,
-                    collapsedIconColor: AppColors.mute,
-                    children: [
-                      Text(
-                        e.value.answer,
-                        style: AppTypography.bodySm.copyWith(
-                          color: AppColors.body,
-                          height: 1.6,
+          children: [
+            ...faqs.asMap().entries.map((e) {
+              return Column(
+                children: [
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                      leading: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEDE9FE),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.help_outline_rounded,
+                          size: 14,
+                          color: Color(0xFF7C3AED),
                         ),
                       ),
-                    ],
+                      title: Text(
+                        e.value.question,
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      iconColor: AppColors.mute,
+                      collapsedIconColor: AppColors.mute,
+                      children: [
+                        Text(
+                          e.value.answer,
+                          style: AppTypography.bodySm.copyWith(
+                            color: AppColors.body,
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                if (!isLast)
                   const Divider(
                     height: 1,
                     thickness: 1,
                     color: Color(0xFFF1F5F9),
                     indent: 60,
                   ),
-              ],
-            );
-          }).toList(),
+                ],
+              );
+            }),
+            // View all row
+            InkWell(
+              onTap: onViewAll,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.format_list_bulleted_rounded,
+                        size: 14,
+                        color: AppColors.body,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Browse all FAQs',
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF4338CA),
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, size: 18, color: Color(0xFFCBD5E1)),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -345,10 +374,7 @@ class _ContactCard extends StatelessWidget {
                       : Radius.zero,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
                     children: [
                       Container(
@@ -377,16 +403,11 @@ class _ContactCard extends StatelessWidget {
                             if (item.badge != null) ...[
                               const SizedBox(height: 5),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 2,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0FDF4),
                                   borderRadius: BorderRadius.circular(9999),
-                                  border: Border.all(
-                                    color: const Color(0xFFBBF7D0),
-                                  ),
+                                  border: Border.all(color: const Color(0xFFBBF7D0)),
                                 ),
                                 child: Text(
                                   item.badge!,
@@ -401,11 +422,7 @@ class _ContactCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: Color(0xFFCBD5E1),
-                      ),
+                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFFCBD5E1)),
                     ],
                   ),
                 ),

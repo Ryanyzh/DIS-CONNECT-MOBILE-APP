@@ -10,6 +10,7 @@ import '../features/tickets/presentation/ticket_history_screen.dart';
 import '../features/tickets/presentation/ticket_conversation_screen.dart';
 import '../features/announcements/presentation/announcements_screen.dart';
 import '../features/announcements/presentation/announcement_detail_screen.dart';
+import '../features/faq/presentation/faq_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/profile/presentation/change_password_screen.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
@@ -132,6 +133,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/announcements',
       builder: (context, state) => const AnnouncementsScreen(),
+    ),
+    GoRoute(
+      path: '/faqs',
+      builder: (context, state) => const FaqScreen(),
     ),
   ],
 );
