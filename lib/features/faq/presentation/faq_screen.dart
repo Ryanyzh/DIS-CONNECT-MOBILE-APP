@@ -270,3 +270,128 @@ class _FaqScreenState extends State<FaqScreen> {
     );
   }
 }
+
+class _CategoryHeader extends StatelessWidget {
+  final String category;
+  const _CategoryHeader({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _categoryColors[category] ?? AppColors.mute;
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          category.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.mute,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FaqGroup extends StatelessWidget {
+  final List<FaqEntry> faqs;
+  final bool showCategoryBadge;
+  const _FaqGroup({required this.faqs, required this.showCategoryBadge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+        child: Column(
+          children: faqs.asMap().entries.map((e) {
+            final faq = e.value;
+            final isLast = e.key == faqs.length - 1;
+            final catColor = _categoryColors[faq.category] ?? AppColors.mute;
+            final catBg = _categoryBg[faq.category] ?? const Color(0xFFF4F4F5);
+            return Column(
+              children: [
+                Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    leading: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: catBg,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.help_outline_rounded,
+                        size: 14,
+                        color: catColor,
+                      ),
+                    ),
+                    title: Text(
+                      faq.question,
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    subtitle: showCategoryBadge
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              faq.category,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: catColor,
+                              ),
+                            ),
+                          )
+                        : null,
+                    iconColor: AppColors.mute,
+                    collapsedIconColor: AppColors.mute,
+                    children: [
+                      Text(
+                        faq.answer,
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.body,
+                          height: 1.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF1F5F9),
+                    indent: 60,
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
