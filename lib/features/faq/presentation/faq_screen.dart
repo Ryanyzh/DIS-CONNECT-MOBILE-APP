@@ -58,17 +58,19 @@ class _FaqScreenState extends State<FaqScreen> {
   Future<void> _load() async {
     try {
       final faqs = await FaqRepository(ApiClient()).getFaqs();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _faqs = faqs;
           _loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = 'Failed to load FAQs.';
           _loading = false;
         });
+      }
     }
   }
 
