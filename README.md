@@ -14,7 +14,6 @@ A Flutter mobile application for scholars to manage support tickets, view announ
 - [Getting Started](#getting-started)
 - [Architecture](#architecture)
 - [App Routes](#app-routes)
-- [Design System](#design-system)
 
 ---
 
@@ -22,7 +21,7 @@ A Flutter mobile application for scholars to manage support tickets, view announ
 
 DisConnect Mobile is the scholar-facing interface of the DisConnect platform. Scholars can file support tickets for scholarship-related matters (reimbursements, internship forms, leave requests, etc.), track their status, communicate with assigned HR officers, and stay up-to-date with announcements — from their phone.
 
-The app authenticates via **Firebase Authentication** and communicates with a **FastAPI** backend using a Firebase ID token as a Bearer token.
+The app authenticates via **Firebase Authentication** and communicates with a **FastAPI** backend using a Firebase ID token as a Bearer token. File attachments are uploaded directly to **Firebase Storage**.
 
 ---
 
@@ -32,32 +31,36 @@ The app authenticates via **Firebase Authentication** and communicates with a **
 | ------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | **Authentication** | Email/password sign-in via Firebase Auth                                                                              |
 | **Home Dashboard** | Greeting card, ticket overview stats, recent tickets, quick actions, announcements banner                             |
-| **Tickets**        | Full ticket lifecycle — browse, filter/search, create (3-step form), view details, conversation thread, audit history |
-| **Announcements**  | Read-only feed of notices from administrators                                                                         |
-| **Profile**        | Scholar profile view and sign-out                                                                                     |
+| **Tickets**        | Full ticket lifecycle — browse, search, create (3-step form), view details, conversation thread, audit history        |
+| **Announcements**  | Feed of notices from administrators with a full detail view                                                           |
+| **Profile**        | View profile, edit display name, change password, help & support, sign out                                            |
 
 ### Ticket Creation — 3-step form
 
 | Step                | Fields                                            |
 | ------------------- | ------------------------------------------------- |
-| 1 · Ticket Info     | Subject, Category, Priority                       |
+| 1 · Ticket Info     | Subject, Category (fetched from API), Priority (fetched from API) |
 | 2 · Details         | Description, Requested Due Date                   |
-| 3 · Review & Attach | File attachments + live preview before submitting |
+| 3 · Review & Attach | File attachments (PDF / images / Office docs) + live preview before submitting |
+
+Attachment upload flow: create ticket → upload each file directly to Firebase Storage at `tickets/{ticket_id}/{filename}` → POST metadata to the backend.
 
 ---
 
 ## Tech Stack
 
-| Layer                | Technology                                     |
-| -------------------- | ---------------------------------------------- |
-| Framework            | Flutter (Dart `^3.11.5`)                       |
-| State Management     | Riverpod (`flutter_riverpod ^3.3.1`)           |
-| Navigation           | GoRouter (`^17.2.3`)                           |
-| Authentication       | Firebase Auth (`firebase_auth ^6.5.1`)         |
-| Database             | Cloud Firestore (`cloud_firestore ^6.4.1`)     |
-| Backend API          | FastAPI (Python) — REST over HTTP              |
-| HTTP Client          | `http ^1.6.0` with Firebase ID token injection |
-| Internationalisation | `intl ^0.20.2`                                 |
+| Layer                | Technology                                             |
+| -------------------- | ------------------------------------------------------ |
+| Framework            | Flutter (Dart `^3.11.5`)                               |
+| State Management     | Riverpod (`flutter_riverpod ^3.3.1`)                   |
+| Navigation           | GoRouter (`^17.2.3`)                                   |
+| Authentication       | Firebase Auth (`firebase_auth ^6.5.1`)                 |
+| Database             | Cloud Firestore (`cloud_firestore ^6.4.1`)             |
+| File Storage         | Firebase Storage (`firebase_storage ^12.x`)            |
+| Backend API          | FastAPI (Python) — REST over HTTP                      |
+| HTTP Client          | `http ^1.6.0` with Firebase ID token injection         |
+| File Picker          | `file_picker ^11.x`                                    |
+| Internationalisation | `intl ^0.20.2`                                         |
 
 ---
 
@@ -70,14 +73,11 @@ lib/
 │   └── router.dart                    # GoRouter — all named routes
 │
 ├── core/
-│   ├── constants/                     # App-wide constants
 │   ├── network/
 │   │   └── api_client.dart            # HTTP client (GET/POST + auth header)
-│   ├── theme/
-│   │   ├── app_theme.dart             # ThemeData
-│   │   └── design_system.dart         # AppColors, AppTypography, AppSpacing, AppBorderRadius
-│   └── widgets/
-│       └── app_button.dart            # Shared button component
+│   └── theme/
+│       ├── app_theme.dart             # ThemeData
+│       └── design_system.dart         # AppColors, AppTypography, AppSpacing, AppBorderRadius
 │
 ├── features/
 │   ├── auth/
@@ -98,12 +98,14 @@ lib/
 │   │
 │   ├── tickets/
 │   │   ├── data/
-│   │   │   └── ticket_repository.dart
+│   │   │   └── ticket_repository.dart  # getTickets, getTicket, createTicket,
+│   │   │                               # createAttachment, getMessages, sendMessage,
+│   │   │                               # getHistory, getCategories, getPriorities
 │   │   ├── models/
 │   │   │   └── ticket_model.dart
 │   │   ├── presentation/
-│   │   │   ├── ticket_list_screen.dart
-│   │   │   ├── create_ticket_screen.dart      # 3-step form
+│   │   │   ├── ticket_list_screen.dart          # Live search + API-backed list
+│   │   │   ├── create_ticket_screen.dart        # 3-step form with file attachments
 │   │   │   ├── ticket_detail_screen.dart
 │   │   │   ├── ticket_conversation_screen.dart
 │   │   │   └── ticket_history_screen.dart
@@ -112,12 +114,18 @@ lib/
 │   │       └── ticket_status_badge.dart
 │   │
 │   ├── announcements/
+│   │   ├── data/
+│   │   │   └── announcement_repository.dart
 │   │   └── presentation/
-│   │       └── announcements_screen.dart
+│   │       ├── announcements_screen.dart
+│   │       └── announcement_detail_screen.dart
 │   │
 │   └── profile/
 │       └── presentation/
-│           └── profile_screen.dart
+│           ├── profile_screen.dart
+│           ├── edit_profile_screen.dart      # Updates Firebase Auth display name
+│           ├── change_password_screen.dart   # Re-auth + updatePassword via Firebase Auth
+│           └── help_support_screen.dart
 │
 ├── shared/
 │   └── widgets/
@@ -139,8 +147,8 @@ Ensure the following are installed before running the project.
 | [Xcode](https://developer.apple.com/xcode/)                 | iOS 17+ SDK (for iOS simulator / device)            |
 | [Android Studio](https://developer.android.com/studio)      | With Android SDK (for Android emulator / device)    |
 | [CocoaPods](https://cocoapods.org/)                         | `sudo gem install cocoapods`                        |
-| Firebase Project                                            | Authentication (email/password) + Firestore enabled |
-| FastAPI Backend                                             | Python backend running at `http://127.0.0.1:8000`   |
+| Firebase Project                                            | Authentication (email/password) + Firestore + Storage enabled |
+| FastAPI Backend                                             | Running with `--host 0.0.0.0` (see Getting Started) |
 
 Verify your Flutter environment is healthy before proceeding:
 
@@ -196,13 +204,18 @@ cd ios && pod install && cd ..
 
 ### 5. Start the backend
 
-The app expects the FastAPI backend to be running locally. From the backend repository:
+Run the FastAPI backend with `--host 0.0.0.0` so it accepts connections from both the simulator and real devices on the same network:
 
 ```bash
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-> The base URL is set in [`lib/core/network/api_client.dart`](lib/core/network/api_client.dart). Update it to point to a staging or production server when deploying.
+> **Simulator:** `127.0.0.1` works fine.
+>
+> **Real device:** The device must be on the same WiFi as your Mac. Update `baseUrl` in [`lib/core/network/api_client.dart`](lib/core/network/api_client.dart) to your Mac's local IP (e.g. `http://192.168.1.x:8000`). Find it with:
+> ```bash
+> ipconfig getifaddr en0
+> ```
 
 ### 6. Run the app
 
@@ -257,6 +270,15 @@ Screen / Widget
                  └─ FastAPI backend verifies token  →  returns data
 ```
 
+### File attachment flow
+
+```
+CreateTicketScreen._submit()
+  ├─ POST /api/v1/tickets          →  get ticket_id
+  ├─ FirebaseStorage.putData()     →  upload file to  tickets/{ticket_id}/{filename}
+  └─ POST /api/v1/tickets/:id/attachments  →  record metadata on backend
+```
+
 ### Navigation
 
 All routes are defined in [`lib/app/router.dart`](lib/app/router.dart) using **GoRouter** with a `StatefulShellRoute.indexedStack` that drives the persistent bottom navigation bar.
@@ -265,14 +287,18 @@ All routes are defined in [`lib/app/router.dart`](lib/app/router.dart) using **G
 
 ## App Routes
 
-| Path                        | Screen                      |
-| --------------------------- | --------------------------- |
-| `/login`                    | Login                       |
-| `/home`                     | Home dashboard              |
-| `/tickets`                  | Ticket list                 |
-| `/tickets/create`           | Create ticket (3-step form) |
-| `/tickets/:id`              | Ticket detail               |
-| `/tickets/:id/conversation` | Conversation & messages     |
-| `/tickets/:id/history`      | Ticket audit history        |
-| `/announcements`            | Announcements feed          |
-| `/profile`                  | Scholar profile             |
+| Path                          | Screen                        |
+| ----------------------------- | ----------------------------- |
+| `/login`                      | Login                         |
+| `/home`                       | Home dashboard                |
+| `/tickets`                    | Ticket list (searchable)      |
+| `/tickets/create`             | Create ticket (3-step form)   |
+| `/tickets/:id`                | Ticket detail                 |
+| `/tickets/:id/conversation`   | Conversation & messages       |
+| `/tickets/:id/history`        | Ticket audit history          |
+| `/announcements`              | Announcements feed            |
+| `/announcements/:id`          | Announcement detail           |
+| `/profile`                    | Scholar profile               |
+| `/profile/edit`               | Edit display name             |
+| `/profile/change-password`    | Change password               |
+| `/profile/help`               | Help & support                |

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl = 'http://192.168.1.14:8000';
 
   /// Builds headers, attaching a fresh Firebase ID token when a user is
   /// signed in.
