@@ -33,7 +33,7 @@ class _Message {
       senderName: json['sender_name'] as String? ?? 'Unknown',
       isMe: json['sender_id'] == currentUid,
       timestamp:
-          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          (DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal()) ??
           DateTime.now(),
       content: json['message_text'] as String? ?? '',
       attachmentNames: attachments

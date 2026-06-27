@@ -137,7 +137,7 @@ class TicketDetailData {
       escalatedAt:      _parseDate(rawEscalation is Map ? rawEscalation['escalated_at'] : json['escalated_at']),
       createdAt:        _parseDate(json['created_at']) ?? DateTime.now(),
       updatedAt:        _parseDate(json['updated_at']) ?? DateTime.now(),
-      dueAt:            _parseDate(json['due_at']),
+      dueAt:            _parseDate(json['due_at'] ?? json['due_date']),
       resolvedAt:       _parseDate(json['resolved_at']),
       closedAt:         _parseDate(json['closed_at']),
       attachments:      rawAttachments
@@ -146,8 +146,12 @@ class TicketDetailData {
     );
   }
 
-  static DateTime? _parseDate(dynamic v) =>
-      v == null ? null : DateTime.tryParse(v.toString());
+  static DateTime? _parseDate(dynamic v) {
+    if (v == null) return null;
+    final parsed = DateTime.tryParse(v.toString());
+    if (parsed == null || parsed.millisecondsSinceEpoch <= 0) return null;
+    return parsed.toLocal();
+  }
 
   static Color? _colorFromHex(String? hex) {
     if (hex == null || hex.isEmpty) return null;

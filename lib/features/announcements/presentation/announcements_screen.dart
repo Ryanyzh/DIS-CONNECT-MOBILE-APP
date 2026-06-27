@@ -46,7 +46,7 @@ class AnnouncementEntry {
   }
 
   static DateTime _parseDate(dynamic raw) {
-    if (raw is String) return DateTime.tryParse(raw) ?? DateTime.now();
+    if (raw is String) return DateTime.tryParse(raw)?.toLocal() ?? DateTime.now();
     return DateTime.now();
   }
 }

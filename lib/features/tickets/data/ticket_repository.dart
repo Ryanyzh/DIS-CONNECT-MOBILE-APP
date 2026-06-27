@@ -29,7 +29,9 @@ class TicketRepository {
       'source': 'mobile',
       if (description != null && description.isNotEmpty) 'description': description,
       'priority_id': ?priorityId,
-      if (dueAt != null) 'due_at': dueAt.toUtc().toIso8601String(),
+      // Send the local calendar date (YYYY-MM-DD), not a UTC timestamp.
+      // Converting to UTC shifts midnight across a day boundary (e.g. UTC+8).
+      if (dueAt != null) 'due_at': dueAt.toIso8601String().substring(0, 10),
     };
     final response = await apiClient.post('/api/v1/tickets', body);
     return response as Map<String, dynamic>;

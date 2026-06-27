@@ -263,6 +263,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     try {
       final repo = TicketRepository(ApiClient());
 
+      debugPrint('Submitting ticket — due_at: ${_dueDate?.toIso8601String().substring(0, 10)}');
       // Step 1 — create ticket, get ticket_id back
       final response = await repo.createTicket(
         subject: _subjectController.text.trim(),
@@ -297,7 +298,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         }
       }
 
-      if (mounted) context.go('/tickets');
+      if (mounted) context.pop();
     } catch (e) {
       debugPrint('Ticket submission error: $e');
       if (mounted) _snack('Failed to submit ticket. Please try again.');

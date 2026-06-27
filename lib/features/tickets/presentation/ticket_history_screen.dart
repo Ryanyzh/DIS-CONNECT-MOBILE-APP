@@ -30,7 +30,7 @@ class _HistoryEntry {
       detail: json['message'] as String? ?? '',
       actorName: json['officer_name'] as String? ?? 'System',
       timestamp:
-          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          (DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal()) ??
           DateTime.now(),
     );
   }

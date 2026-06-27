@@ -39,7 +39,7 @@ class Ticket {
   }
 
   static DateTime? _parseDate(dynamic v) =>
-      v == null ? null : DateTime.tryParse(v.toString());
+      v == null ? null : DateTime.tryParse(v.toString())?.toLocal();
 
   Map<String, dynamic> toJson() => {
         'id': id,

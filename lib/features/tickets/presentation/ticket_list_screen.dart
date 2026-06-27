@@ -23,6 +23,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
   bool _loading = true;
   String _query = '';
 
+  // Route-change tracking for auto-refresh on return from sub-routes
+  bool _firstDepChange = true;
+  bool? _wasCurrent;
+
+  static bool _isDone(Ticket t) {
+    final s = t.status.toLowerCase();
+    return s == 'resolved' || s == 'closed';
+  }
+
   List<Ticket> get _visible {
     if (_query.isEmpty) return _tickets;
     final q = _query.toLowerCase();
@@ -34,13 +43,34 @@ class _TicketListScreenState extends State<TicketListScreen> {
     ).toList();
   }
 
+  List<Ticket> get _active   => _visible.where((t) => !_isDone(t)).toList();
+  List<Ticket> get _resolved => _visible.where(_isDone).toList();
+
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_firstDepChange) {
+      _firstDepChange = false;
+      _wasCurrent = ModalRoute.of(context)?.isCurrent;
+      return;
+    }
+    final isCurrent = ModalRoute.of(context)?.isCurrent == true;
+    // Reload only when transitioning from hidden → current (returned from sub-route)
+    if (isCurrent && _wasCurrent == false && !_loading) {
+      _load();
+    }
+    _wasCurrent = isCurrent;
+  }
+
   Future<void> _load() async {
+    if (_loading && _tickets.isNotEmpty) return;
+    setState(() => _loading = true);
     try {
       final tickets = await TicketRepository(ApiClient()).getTickets();
       if (mounted) setState(() { _tickets = tickets; _loading = false; });
@@ -54,8 +84,20 @@ class _TicketListScreenState extends State<TicketListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/tickets/create').then((_) => _load()),
+        backgroundColor: const Color(0xFF3730A3),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'New Ticket',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: SafeArea(
-        child: CustomScrollView(
+        child: RefreshIndicator(
+          onRefresh: _load,
+          color: const Color(0xFF3730A3),
+          child: CustomScrollView(
           slivers: [
             // ── App bar ──────────────────────────────────────────────────
             SliverAppBar(
@@ -95,23 +137,83 @@ class _TicketListScreenState extends State<TicketListScreen> {
               const SliverFillRemaining(
                 child: Center(child: Text('No tickets found')),
               )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _TicketCard(
-                        ticket: _visible[i],
-                        onTap: () => context.go('/tickets/${_visible[i].id}'),
+            else ...[
+              // Active tickets
+              if (_active.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _TicketCard(
+                          ticket: _active[i],
+                          onTap: () => context.go('/tickets/${_active[i].id}'),
+                        ),
                       ),
+                      childCount: _active.length,
                     ),
-                    childCount: _visible.length,
                   ),
                 ),
-              ),
+
+              // Resolved / Closed section
+              if (_resolved.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                    child: Row(
+                      children: [
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                size: 13,
+                                color: Color(0xFF94A3B8),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                'RESOLVED & CLOSED (${_resolved.length})',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF94A3B8),
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _TicketCard(
+                          ticket: _resolved[i],
+                          onTap: () => context.go('/tickets/${_resolved[i].id}'),
+                          muted: true,
+                        ),
+                      ),
+                      childCount: _resolved.length,
+                    ),
+                  ),
+                ),
+              ],
+
+              // Bottom padding so FAB doesn't overlap last card
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+            ],
           ],
+        ),
         ),
       ),
     );
@@ -125,8 +227,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
 class _TicketCard extends StatelessWidget {
   final Ticket ticket;
   final VoidCallback onTap;
+  final bool muted;
 
-  const _TicketCard({required this.ticket, required this.onTap});
+  const _TicketCard({required this.ticket, required this.onTap, this.muted = false});
 
   @override
   Widget build(BuildContext context) {
@@ -136,15 +239,18 @@ class _TicketCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: muted ? const Color(0xFFF8FAFC) : Colors.white,
           borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
-          boxShadow: [
+          boxShadow: muted ? null : [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
+          border: muted
+              ? Border.all(color: const Color(0xFFE2E8F0))
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
