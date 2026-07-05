@@ -7,6 +7,7 @@ import 'package:disconnect_mobile/features/home/widgets/greeting_header.dart';
 import 'package:disconnect_mobile/features/home/widgets/quick_actions_section.dart';
 import 'package:disconnect_mobile/features/home/widgets/overview_stats_card.dart';
 import 'package:disconnect_mobile/features/home/widgets/recent_tickets_section.dart';
+import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
 import 'package:disconnect_mobile/features/home/widgets/announcement_banner.dart';
 
@@ -18,50 +19,61 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const TicketOverview _overview = TicketOverview(
-    inReview: 3,
-    waiting: 2,
-    resolved: 5,
-    closed: 1,
-  );
-
-  // Sample data — tickets section still uses mock until that feature is wired
-  static final List<Ticket> _recentTickets = [
-    Ticket(
-      id: '1',
-      displayId: 'REB-2024-0012',
-      title: 'Exchange Programme Reimbursement',
-      category: 'Reimbursement',
-      status: 'In Review',
-      priority: 'Medium',
-      createdAt: DateTime(2024, 5, 12),
-    ),
-    Ticket(
-      id: '2',
-      displayId: 'EXCH-2024-0051',
-      title: 'Internship Forms Submission',
-      category: 'Internship',
-      status: 'Waiting',
-      priority: 'High',
-      createdAt: DateTime(2024, 5, 11),
-    ),
-    Ticket(
-      id: '3',
-      displayId: 'ACD-2024-0080',
-      title: 'Scholarship Declaration',
-      category: 'Scholarship',
-      status: 'Resolved',
-      priority: 'Low',
-      createdAt: DateTime(2024, 5, 8),
-    ),
-  ];
-
+  List<Ticket> _tickets = [];
+  bool _loadingTickets = true;
   AnnouncementEntry? _latestAnnouncement;
+
+  // Derived from _tickets ────────────────────────────────────────────────────
+
+  TicketOverview get _overview {
+    int inReview = 0, waiting = 0, resolved = 0, closed = 0;
+    for (final t in _tickets) {
+      final s = t.status.toLowerCase();
+      if (s.contains('review')) {
+        inReview++;
+      } else if (s.contains('wait') || s.contains('pending')) {
+        waiting++;
+      } else if (s == 'resolved') {
+        resolved++;
+      } else if (s == 'closed') {
+        closed++;
+      }
+    }
+    return TicketOverview(
+      inReview: inReview,
+      waiting: waiting,
+      resolved: resolved,
+      closed: closed,
+    );
+  }
+
+  List<Ticket> get _recentTickets {
+    final sorted = [..._tickets]
+      ..sort((a, b) {
+        final ad = a.updatedAt ?? a.createdAt ?? DateTime(0);
+        final bd = b.updatedAt ?? b.createdAt ?? DateTime(0);
+        return bd.compareTo(ad);
+      });
+    return sorted.take(3).toList();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
+    _loadTickets();
     _loadLatestAnnouncement();
+  }
+
+  Future<void> _loadTickets() async {
+    try {
+      final tickets = await TicketRepository(ApiClient()).getTickets();
+      if (mounted) setState(() { _tickets = tickets; _loadingTickets = false; });
+    } catch (e) {
+      debugPrint('Failed to load home tickets: $e');
+      if (mounted) setState(() => _loadingTickets = false);
+    }
   }
 
   Future<void> _loadLatestAnnouncement() async {
@@ -126,18 +138,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 28),
 
                     // ── My Overview ──────────────────────────────────────
-                    OverviewStatsCard(
-                      overview: _overview,
-                      onViewAll: () => context.go('/tickets'),
-                    ),
+                    if (_loadingTickets)
+                      const _SectionSkeleton(height: 100)
+                    else
+                      OverviewStatsCard(
+                        overview: _overview,
+                        onViewAll: () => context.go('/tickets'),
+                      ),
                     const SizedBox(height: 28),
 
                     // ── Recent Tickets ───────────────────────────────────
-                    RecentTicketsSection(
-                      tickets: _recentTickets,
-                      onViewAll: () => context.go('/tickets'),
-                      onTicketTap: (t) => context.push('/tickets/${t.id}'),
-                    ),
+                    if (_loadingTickets)
+                      const _SectionSkeleton(height: 160)
+                    else
+                      RecentTicketsSection(
+                        tickets: _recentTickets,
+                        onViewAll: () => context.go('/tickets'),
+                        onTicketTap: (t) => context.push('/tickets/${t.id}'),
+                      ),
                     const SizedBox(height: 28),
 
                     // ── Announcement banner ──────────────────────────────
@@ -148,6 +166,32 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionSkeleton extends StatelessWidget {
+  final double height;
+  const _SectionSkeleton({required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF94A3B8),
+          ),
         ),
       ),
     );
