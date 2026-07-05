@@ -35,7 +35,7 @@ class RecentTicketsSection extends StatelessWidget {
               child: Text(
                 'View all',
                 style: AppTypography.bodySm.copyWith(
-                  color: const Color(0xFF2563EB),
+                  color: const Color(0xFF1D67F5),
                   fontWeight: FontWeight.w600,
                 ),
               ),

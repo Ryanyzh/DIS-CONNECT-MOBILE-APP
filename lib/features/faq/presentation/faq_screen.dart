@@ -13,16 +13,16 @@ const _categories = [
 ];
 
 const _categoryColors = <String, Color>{
-  'General': Color(0xFF7C3AED),
-  'Tickets': Color(0xFF2563EB),
+  'General': Color(0xFF9A32F8),
+  'Tickets': Color(0xFF1D67F5),
   'Account': Color(0xFFD97706),
   'Notifications': Color(0xFF059669),
   'Files': Color(0xFF71717A),
 };
 
 const _categoryBg = <String, Color>{
-  'General': Color(0xFFEDE9FE),
-  'Tickets': Color(0xFFDBEAFE),
+  'General': Color(0xFFF0ECFF),
+  'Tickets': Color(0xFFE4DCFF),
   'Account': Color(0xFFFEF3C7),
   'Notifications': Color(0xFFD1FAE5),
   'Files': Color(0xFFF4F4F5),
@@ -112,7 +112,7 @@ class _FaqScreenState extends State<FaqScreen> {
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          icon: const GradientIcon(icon: Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
