@@ -2,8 +2,35 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
+// ── Environment selector ───────────────────────────────────────────────────────
+// Change _env to switch where the app points.
+enum _Env { local, localDevice, deployed }
+
 class ApiClient {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const _Env _env = _Env.deployed;
+
+  // Simulator  → local uvicorn on localhost
+  static const String _localUrl = 'http://127.0.0.1:8000';
+
+  // Real device → replace with your Mac's LAN IP (run: ipconfig getifaddr en0)
+  static const String _localDeviceUrl = 'http://192.168.1.14:8000';
+
+  // Firebase Functions — the function is named "api", so Firebase strips that
+  // prefix from req.path. Appending /api/v1/... makes req.path = /api/v1/...
+  // which matches the FastAPI routes defined in functions/app/main.py.
+  static const String _deployedUrl =
+      'https://asia-southeast1-orbital-dis-connect.cloudfunctions.net/api';
+
+  static String get baseUrl {
+    switch (_env) {
+      case _Env.local:
+        return _localUrl;
+      case _Env.localDevice:
+        return _localDeviceUrl;
+      case _Env.deployed:
+        return _deployedUrl;
+    }
+  }
 
   /// Builds headers, attaching a fresh Firebase ID token when a user is
   /// signed in.
