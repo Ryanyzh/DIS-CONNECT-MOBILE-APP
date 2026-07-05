@@ -80,9 +80,9 @@ AnnouncementCategoryStyle announcementCategoryStyle(String category) {
       );
     case 'event':
       return const AnnouncementCategoryStyle(
-        badgeBg: Color(0xFFDBEAFE),
-        badgeText: Color(0xFF1D4ED8),
-        accentColor: Color(0xFF2563EB),
+        badgeBg: Color(0xFFE4DCFF),
+        badgeText: Color(0xFF1D4BEB),
+        accentColor: Color(0xFF1D67F5),
         icon: Icons.event_outlined,
       );
     case 'maintenance':
@@ -108,9 +108,9 @@ AnnouncementCategoryStyle announcementCategoryStyle(String category) {
       );
     default: // General
       return const AnnouncementCategoryStyle(
-        badgeBg: Color(0xFFE0E7FF),
-        badgeText: Color(0xFF4338CA),
-        accentColor: Color(0xFF4338CA),
+        badgeBg: Color(0xFFE4DCFF),
+        badgeText: Color(0xFF4C39F2),
+        accentColor: Color(0xFF4C39F2),
         icon: Icons.campaign_outlined,
       );
   }

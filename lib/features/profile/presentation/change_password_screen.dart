@@ -98,7 +98,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          icon: const GradientIcon(icon: Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -127,7 +127,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF5F3FF),
                   borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
-                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                  border: Border.all(color: const Color(0xFFDDD0FF)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,14 +135,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     const Icon(
                       Icons.lock_outline,
                       size: 15,
-                      color: Color(0xFF7C3AED),
+                      color: Color(0xFF9A32F8),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'You will be asked to enter your current password to verify your identity before making changes.',
                         style: AppTypography.caption.copyWith(
-                          color: const Color(0xFF5B21B6),
+                          color: const Color(0xFF6A2FF3),
                           height: 1.5,
                         ),
                       ),
@@ -237,42 +237,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // ── Submit button ─────────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
-                height: 54,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3730A3),
-                    disabledBackgroundColor: const Color(
-                      0xFF3730A3,
-                    ).withValues(alpha: 0.6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppBorderRadius.wiseLg,
-                      ),
-                    ),
-                  ),
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.lock_reset_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                  label: Text(
-                    _isLoading ? 'Updating...' : 'Update Password',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                child: GradientButton(
+                  onPressed: _submit,
+                  loading: _isLoading,
+                  icon: Icons.lock_reset_rounded,
+                  label: 'Update Password',
+                  loadingLabel: 'Updating...',
                 ),
               ),
             ],

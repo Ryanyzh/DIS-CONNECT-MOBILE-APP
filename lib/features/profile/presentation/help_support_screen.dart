@@ -35,7 +35,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          icon: const GradientIcon(icon: Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -56,7 +56,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF4338CA), Color(0xFF7C3AED)],
+                colors: [Color(0xFF9A32F8), Color(0xFF4C39F2), Color(0xFF1D67F5)],
+                stops: [0.0, 0.5, 1.0],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -104,7 +105,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: Text(
                   'View all',
                   style: AppTypography.caption.copyWith(
-                    color: const Color(0xFF4338CA),
+                    color: const Color(0xFF4C39F2),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -135,7 +136,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: Text(
                   'Browse all FAQs →',
                   style: AppTypography.bodySm.copyWith(
-                    color: const Color(0xFF4338CA),
+                    color: const Color(0xFF4C39F2),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -155,8 +156,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             items: [
               _ContactItem(
                 icon: Icons.email_outlined,
-                iconBg: const Color(0xFFDBEAFE),
-                iconColor: const Color(0xFF2563EB),
+                iconBg: const Color(0xFFE4DCFF),
+                iconColor: const Color(0xFF1D67F5),
                 label: 'Email Us',
                 subtitle: 'support@dis-connect.sg',
                 badge: 'Replies within 1 – 2 business days',
@@ -166,8 +167,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               ),
               _ContactItem(
                 icon: Icons.confirmation_number_outlined,
-                iconBg: const Color(0xFFEDE9FE),
-                iconColor: const Color(0xFF7C3AED),
+                iconBg: const Color(0xFFF0ECFF),
+                iconColor: const Color(0xFF9A32F8),
                 label: 'Submit a Ticket',
                 subtitle: 'Create a ticket for technical issues',
                 onTap: () => Navigator.of(context).pop(),
@@ -245,13 +246,13 @@ class _FaqCard extends StatelessWidget {
                         width: 28,
                         height: 28,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFEDE9FE),
+                          color: Color(0xFFF0ECFF),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.help_outline_rounded,
                           size: 14,
-                          color: Color(0xFF7C3AED),
+                          color: Color(0xFF9A32F8),
                         ),
                       ),
                       title: Text(
@@ -309,7 +310,7 @@ class _FaqCard extends StatelessWidget {
                         'Browse all FAQs',
                         style: AppTypography.bodySm.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF4338CA),
+                          color: const Color(0xFF4C39F2),
                         ),
                       ),
                     ),
@@ -467,7 +468,7 @@ class _TipsCard extends StatelessWidget {
                   width: 20,
                   height: 20,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFEDE9FE),
+                    color: Color(0xFFF0ECFF),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -476,7 +477,7 @@ class _TipsCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF7C3AED),
+                      color: Color(0xFF9A32F8),
                     ),
                   ),
                 ),

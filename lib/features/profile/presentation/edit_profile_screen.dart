@@ -73,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          icon: const GradientIcon(icon: Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -207,42 +207,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               // ── Save button ───────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
-                height: 54,
-                child: ElevatedButton.icon(
-                  onPressed: _isSaving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3730A3),
-                    disabledBackgroundColor: const Color(
-                      0xFF3730A3,
-                    ).withValues(alpha: 0.6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppBorderRadius.wiseLg,
-                      ),
-                    ),
-                  ),
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                  label: Text(
-                    _isSaving ? 'Saving...' : 'Save Changes',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                child: GradientButton(
+                  onPressed: _save,
+                  loading: _isSaving,
+                  icon: Icons.check_rounded,
+                  label: 'Save Changes',
+                  loadingLabel: 'Saving...',
                 ),
               ),
             ],

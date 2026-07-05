@@ -68,7 +68,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+            icon: const GradientIcon(icon: Icons.arrow_back),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
@@ -100,7 +100,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             shadowColor: Colors.black.withValues(alpha: 0.08),
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+              icon: const GradientIcon(icon: Icons.arrow_back),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Text(
@@ -413,7 +413,7 @@ class _BodyBlock extends StatelessWidget {
                       padding: EdgeInsets.only(top: 7),
                       child: CircleAvatar(
                         radius: 3,
-                        backgroundColor: Color(0xFF4338CA),
+                        backgroundColor: Color(0xFF4C39F2),
                       ),
                     ),
                     const SizedBox(width: 10),
