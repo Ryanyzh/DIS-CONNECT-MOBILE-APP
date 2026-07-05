@@ -187,9 +187,6 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   Future<void> _load() async {
     try {
       final data = await TicketRepository(ApiClient()).getTicket(widget.ticketId);
-      debugPrint('=== TICKET RAW RESPONSE ===');
-      debugPrint(data.toString());
-      debugPrint('===========================');
       if (mounted) setState(() { _detail = TicketDetailData.fromJson(data); _loading = false; });
     } catch (e) {
       debugPrint('Failed to load ticket: $e');
@@ -294,7 +291,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       scrolledUnderElevation: 0.5,
       shadowColor: Colors.black.withValues(alpha: 0.08),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+        icon: const GradientIcon(icon: Icons.arrow_back),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(
@@ -382,8 +379,8 @@ class _SubjectCard extends StatelessWidget {
               _MetaChip(
                 icon: Icons.category_outlined,
                 label: detail.category,
-                bg: const Color(0xFFEDE9FE),
-                color: const Color(0xFF7C3AED),
+                bg: const Color(0xFFF0ECFF),
+                color: const Color(0xFF9A32F8),
               ),
               if (detail.priority != null)
                 _MetaChip(
@@ -526,7 +523,7 @@ class _OfficerCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: hasOfficer
-                  ? const Color(0xFFE0E7FF)
+                  ? const Color(0xFFE4DCFF)
                   : const Color(0xFFF1F5F9),
               shape: BoxShape.circle,
             ),
@@ -537,7 +534,7 @@ class _OfficerCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF4338CA),
+                      color: Color(0xFF4C39F2),
                     ),
                   )
                 : const Icon(

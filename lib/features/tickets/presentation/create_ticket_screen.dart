@@ -128,7 +128,7 @@ Color _fileIconColor(String mimeType) {
   if (mimeType.contains('sheet') || mimeType.contains('excel')) {
     return const Color(0xFF22C55E);
   }
-  return const Color(0xFF6366F1);
+  return const Color(0xFF4C39F2);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -263,7 +263,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     try {
       final repo = TicketRepository(ApiClient());
 
-      debugPrint('Submitting ticket — due_at: ${_dueDate?.toIso8601String().substring(0, 10)}');
       // Step 1 — create ticket, get ticket_id back
       final response = await repo.createTicket(
         subject: _subjectController.text.trim(),
@@ -340,7 +339,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(
-            primary: Color(0xFF4338CA),
+            primary: Color(0xFF4C39F2),
             onPrimary: Colors.white,
             surface: Colors.white,
             onSurface: Color(0xFF1E293B),
@@ -434,8 +433,14 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       scrolledUnderElevation: 0.5,
       shadowColor: Colors.black.withValues(alpha: 0.08),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.ink),
-        onPressed: null, // TODO: confirm discard if there are unsaved changes
+        icon: const GradientIcon(icon: Icons.arrow_back),
+        onPressed: () {
+          if (_currentStep > 0) {
+            _goBack();
+          } else {
+            Navigator.of(context).maybePop();
+          }
+        },
       ),
       title: Column(
         children: [
@@ -539,7 +544,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TODO: category dropdown, priority selector, subject field
           // ── Section hint ────────────────────────────────────────────────
           _StepHint(
             icon: Icons.edit_note_rounded,
@@ -684,7 +688,7 @@ class _StepIndicator extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: isDone
-                        ? const Color(0xFF4338CA)
+                        ? const Color(0xFF4C39F2)
                         : const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(9999),
                   ),
@@ -707,12 +711,12 @@ class _StepIndicator extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isDone
-                      ? const Color(0xFF4338CA)
+                      ? const Color(0xFF4C39F2)
                       : isActive
-                      ? const Color(0xFF4338CA)
+                      ? const Color(0xFF4C39F2)
                       : const Color(0xFFF1F5F9),
                   border: isActive
-                      ? Border.all(color: const Color(0xFFE0E7FF), width: 3)
+                      ? Border.all(color: const Color(0xFFE4DCFF), width: 3)
                       : null,
                 ),
                 child: Center(
@@ -741,7 +745,7 @@ class _StepIndicator extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                   color: isActive
-                      ? const Color(0xFF4338CA)
+                      ? const Color(0xFF4C39F2)
                       : isDone
                       ? AppColors.body
                       : AppColors.mute,
@@ -820,48 +824,12 @@ class _BottomNav extends StatelessWidget {
           // Next / Submit button
           Expanded(
             flex: currentStep == 0 ? 1 : 2,
-            child: SizedBox(
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: isSubmitting ? null : onNext,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3730A3),
-                  disabledBackgroundColor: const Color(
-                    0xFF3730A3,
-                  ).withValues(alpha: 0.6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppBorderRadius.wiseLg),
-                  ),
-                ),
-                icon: isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(
-                        isLast
-                            ? Icons.send_rounded
-                            : Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                label: Text(
-                  isSubmitting
-                      ? 'Submitting...'
-                      : isLast
-                      ? 'Submit Ticket'
-                      : 'Continue',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            child: GradientButton(
+              onPressed: onNext,
+              loading: isSubmitting,
+              icon: isLast ? Icons.send_rounded : Icons.arrow_forward_rounded,
+              label: isLast ? 'Submit Ticket' : 'Continue',
+              loadingLabel: 'Submitting...',
             ),
           ),
         ],
@@ -886,18 +854,18 @@ class _StepHint extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
-        border: Border.all(color: const Color(0xFFDDD6FE)),
+        border: Border.all(color: const Color(0xFFDDD0FF)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF7C3AED)),
+          Icon(icon, size: 16, color: const Color(0xFF9A32F8)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: AppTypography.caption.copyWith(
-                color: const Color(0xFF5B21B6),
+                color: const Color(0xFF6A2FF3),
                 height: 1.5,
               ),
             ),
@@ -1016,12 +984,12 @@ class _CategoryDropdown extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: const BoxDecoration(
-                color: Color(0xFFEDE9FE),
+                color: Color(0xFFF0ECFF),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 selected?.icon ?? Icons.category_outlined,
-                color: const Color(0xFF7C3AED),
+                color: const Color(0xFF9A32F8),
                 size: 18,
               ),
             ),
@@ -1082,10 +1050,10 @@ class _CategorySheet extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEDE9FE),
+                  color: Color(0xFFF0ECFF),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(c.icon, color: const Color(0xFF7C3AED), size: 18),
+                child: Icon(c.icon, color: const Color(0xFF9A32F8), size: 18),
               ),
               title: Text(
                 c.label,
@@ -1095,7 +1063,7 @@ class _CategorySheet extends StatelessWidget {
                 ),
               ),
               trailing: selected?.label == c.label
-                  ? const Icon(Icons.check, color: Color(0xFF4338CA), size: 18)
+                  ? const Icon(Icons.check, color: Color(0xFF4C39F2), size: 18)
                   : null,
               onTap: () => onSelect(c),
             ),
@@ -1243,7 +1211,7 @@ class _DueDatePicker extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
           border: Border.all(
-            color: hasDate ? const Color(0xFF4338CA) : const Color(0xFFE2E8F0),
+            color: hasDate ? const Color(0xFF4C39F2) : const Color(0xFFE2E8F0),
             width: hasDate ? 1.5 : 1,
           ),
         ),
@@ -1254,13 +1222,13 @@ class _DueDatePicker extends StatelessWidget {
               height: 34,
               decoration: BoxDecoration(
                 color: hasDate
-                    ? const Color(0xFFE0E7FF)
+                    ? const Color(0xFFE4DCFF)
                     : const Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.event_rounded,
-                color: hasDate ? const Color(0xFF4338CA) : AppColors.mute,
+                color: hasDate ? const Color(0xFF4C39F2) : AppColors.mute,
                 size: 17,
               ),
             ),
@@ -1272,7 +1240,7 @@ class _DueDatePicker extends StatelessWidget {
                     : 'Select a date (optional)',
                 style: AppTypography.bodySm.copyWith(
                   color: hasDate
-                      ? const Color(0xFF3730A3)
+                      ? const Color(0xFF6A2FF3)
                       : const Color(0xFFADB5BD),
                   fontWeight: hasDate ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -1410,12 +1378,12 @@ class _AttachmentsBox extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFEDE9FE),
+                        color: Color(0xFFF0ECFF),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.attach_file_rounded,
-                        color: Color(0xFF7C3AED),
+                        color: Color(0xFF9A32F8),
                         size: 18,
                       ),
                     ),
@@ -1487,7 +1455,7 @@ class _ReviewCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9FE),
+                  color: const Color(0xFFF0ECFF),
                   borderRadius: BorderRadius.circular(9999),
                 ),
                 child: const Text(
@@ -1495,7 +1463,7 @@ class _ReviewCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF7C3AED),
+                    color: Color(0xFF9A32F8),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -1537,8 +1505,8 @@ class _ReviewCard extends StatelessWidget {
                 _ReviewChip(
                   icon: category!.icon,
                   label: category!.label,
-                  bg: const Color(0xFFEDE9FE),
-                  color: const Color(0xFF7C3AED),
+                  bg: const Color(0xFFF0ECFF),
+                  color: const Color(0xFF9A32F8),
                 )
               else
                 _ReviewChip(
@@ -1579,13 +1547,13 @@ class _ReviewCard extends StatelessWidget {
                 const Icon(
                   Icons.event_outlined,
                   size: 14,
-                  color: Color(0xFF4338CA),
+                  color: Color(0xFF4C39F2),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Due ${DateFormat('d MMM yyyy').format(dueDate!)}',
                   style: AppTypography.caption.copyWith(
-                    color: const Color(0xFF4338CA),
+                    color: const Color(0xFF4C39F2),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

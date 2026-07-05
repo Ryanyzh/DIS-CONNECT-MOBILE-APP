@@ -139,7 +139,7 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          icon: const GradientIcon(icon: Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -216,7 +216,7 @@ class _MessageCard extends StatelessWidget {
                   style: AppTypography.bodySm.copyWith(
                     fontWeight: FontWeight.w700,
                     color: message.isMe
-                        ? const Color(0xFF4338CA)
+                        ? const Color(0xFF4C39F2)
                         : AppColors.ink,
                   ),
                 ),
@@ -333,7 +333,7 @@ class _ReplyBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: sending
                     ? const Color(0xFF94A3B8)
-                    : const Color(0xFF3730A3),
+                    : const Color(0xFF6A2FF3),
                 borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
               ),
               child: sending
