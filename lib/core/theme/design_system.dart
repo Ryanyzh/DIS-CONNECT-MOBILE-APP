@@ -113,7 +113,7 @@ class AppBorderRadius {
 class AppTypography {
   AppTypography._();
 
-  static const String fontFamily = 'Inter';
+  static const String fontFamily = 'Poppins';
 
   static const TextStyle displayMega = TextStyle(
     fontSize: 126, height: 0.85, fontWeight: FontWeight.w900, color: AppColors.ink,
