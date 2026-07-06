@@ -135,4 +135,73 @@ void main() {
       expect(e.date.day, 30);
     });
   });
+
+  // ── announcementCategoryStyle ──────────────────────────────────────────────
+
+  group('announcementCategoryStyle', () {
+    // Each category maps to a specific colour palette and icon used in the
+    // badge. Verify the full style for Deadline (red theme).
+    test('Deadline — badge bg is red tint', () {
+      final s = announcementCategoryStyle('Deadline');
+      expect(s.badgeBg, const Color(0xFFFEE2E2));
+      expect(s.badgeText, const Color(0xFFDC2626));
+      expect(s.icon, Icons.timer_outlined);
+    });
+
+    // The switch uses category.toLowerCase(), so 'deadline' must map to the
+    // same style as 'Deadline'. Ensures the API can send any casing.
+    test('deadline is case-insensitive', () {
+      final s = announcementCategoryStyle('deadline');
+      expect(s.badgeBg, const Color(0xFFFEE2E2));
+    });
+
+    // Upper-case input must also be handled correctly.
+    test('DEADLINE uppercase also works', () {
+      final s = announcementCategoryStyle('DEADLINE');
+      expect(s.badgeBg, const Color(0xFFFEE2E2));
+    });
+
+    // Event category uses the brand purple palette and a calendar icon.
+    test('Event — badge bg is purple tint', () {
+      final s = announcementCategoryStyle('Event');
+      expect(s.badgeBg, const Color(0xFFE4DCFF));
+      expect(s.icon, Icons.event_outlined);
+    });
+
+    // Maintenance uses a neutral slate palette to convey a system/admin tone.
+    test('Maintenance — badge bg is slate tint', () {
+      final s = announcementCategoryStyle('Maintenance');
+      expect(s.badgeBg, const Color(0xFFF1F5F9));
+      expect(s.icon, Icons.build_outlined);
+    });
+
+    // Urgent uses orange to indicate high importance without implying an error.
+    test('Urgent — badge bg is orange tint', () {
+      final s = announcementCategoryStyle('Urgent');
+      expect(s.badgeBg, const Color(0xFFFFEDD5));
+      expect(s.icon, Icons.warning_amber_rounded);
+    });
+
+    // Result uses green to signal a positive outcome (e.g. scholarship awarded).
+    test('Result — badge bg is green tint', () {
+      final s = announcementCategoryStyle('Result');
+      expect(s.badgeBg, const Color(0xFFD1FAE5));
+      expect(s.icon, Icons.check_circle_outline_rounded);
+    });
+
+    // General is the explicit default category.
+    test('General (default) — badge bg is brand purple tint', () {
+      final s = announcementCategoryStyle('General');
+      expect(s.badgeBg, const Color(0xFFE4DCFF));
+      expect(s.icon, Icons.campaign_outlined);
+    });
+
+    // Any unknown string (e.g. a new category added to the backend before the
+    // app is updated) must fall through to the General style rather than
+    // throwing a StateError.
+    test('unknown category falls through to General style', () {
+      final s = announcementCategoryStyle('Foobar');
+      expect(s.icon, Icons.campaign_outlined);
+    });
+  });
 }
