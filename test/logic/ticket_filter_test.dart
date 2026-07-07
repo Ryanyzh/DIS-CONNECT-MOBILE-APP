@@ -95,4 +95,87 @@ void main() {
       expect(isDone(_t(status: '')), isFalse);
     });
   });
+
+  // ── visible (search filtering) ─────────────────────────────────────────────
+
+  group('visible', () {
+    final tickets = [
+      _t(
+        id: '1',
+        title: 'Medical reimbursement',
+        category: 'Finance',
+        status: 'Open',
+      ),
+      _t(
+        id: '2',
+        title: 'Exchange programme',
+        category: 'Internship',
+        status: 'In Review',
+      ),
+      _t(
+        id: '3',
+        title: 'Allowance query',
+        displayId: 'TKT-99',
+        category: 'Finance',
+        status: 'Resolved',
+      ),
+    ];
+
+    // An empty search query means "show everything" — no filtering applied.
+    test('empty query returns all tickets', () {
+      expect(visible(tickets, ''), hasLength(3));
+    });
+
+    // Title is the most natural search target for users looking for a
+    // specific ticket. Match must be case-insensitive.
+    test('matches by title (case-insensitive)', () {
+      final r = visible(tickets, 'medical');
+      expect(r.length, 1);
+      expect(r.first.id, '1');
+    });
+
+    // Users may search by the ticket reference code (e.g. "TKT-99") copied
+    // from an email or notification.
+    test('matches by displayId', () {
+      final r = visible(tickets, 'TKT-99');
+      expect(r.length, 1);
+      expect(r.first.id, '3');
+    });
+
+    // displayId search must be case-insensitive (users may type "tkt-99").
+    test('displayId match is case-insensitive', () {
+      final r = visible(tickets, 'tkt-99');
+      expect(r.length, 1);
+    });
+
+    // Searching by category lets users quickly find all tickets of the same
+    // type (e.g. "Finance" to see all financial requests).
+    test('matches by category', () {
+      final r = visible(tickets, 'finance');
+      // Both ticket 1 and ticket 3 have category = 'Finance'.
+      expect(r.length, 2);
+    });
+
+    // Searching by status lets users quickly find all tickets in a particular
+    // workflow state (e.g. "in review" to see what is being processed).
+    test('matches by status', () {
+      final r = visible(tickets, 'in review');
+      expect(r.length, 1);
+      expect(r.first.id, '2');
+    });
+
+    // A query that does not match any field must return an empty list so the
+    // screen can show an appropriate "no results" message.
+    test('query matching no ticket returns empty list', () {
+      expect(visible(tickets, 'zzznomatch'), isEmpty);
+    });
+
+    // Partial word matches should work — users rarely type full words when
+    // scanning a list.
+    test('partial title match works', () {
+      final r = visible(tickets, 'programme');
+      expect(r.length, 1);
+      expect(r.first.id, '2');
+    });
+  });
 }
