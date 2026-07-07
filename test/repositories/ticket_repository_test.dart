@@ -332,4 +332,56 @@ void main() {
       expect(messages[0]['message_text'], 'Hello');
     });
   });
+
+  // ── Ticket (model) integration ─────────────────────────────────────────────
+
+  group('Ticket model via getTickets', () {
+    // Tickets created via the API before a createdAt is set may return null
+    // for created_at. The model must propagate null rather than throwing.
+    test('ticket with null created_at has null createdAt', () async {
+      when(() => mockClient.get('/api/v1/tickets')).thenAnswer(
+        (_) async => {
+          'tickets': [
+            {
+              'ticket_id': 'n1',
+              'subject': 'Null date ticket',
+              'category': '',
+              'status': 'Open',
+              'priority': '',
+              'created_at': null,
+            },
+          ],
+        },
+      );
+
+      final tickets = await repo.getTickets();
+
+      expect(tickets.first.createdAt, isNull);
+    });
+
+    // The enriched list endpoint nests category, status, and priority as maps.
+    // Confirm the repository + model pipeline extracts the display strings.
+    test('enriched nested status is mapped correctly', () async {
+      when(() => mockClient.get('/api/v1/tickets')).thenAnswer(
+        (_) async => {
+          'tickets': [
+            {
+              'ticket_id': 'e1',
+              'subject': 'Enriched',
+              'category': {'category_name': 'HR'},
+              'status': {'status_name': 'In Review'},
+              'priority': {'priority_name': 'Low'},
+            },
+          ],
+        },
+      );
+
+      final tickets = await repo.getTickets();
+      final t = tickets.first;
+
+      expect(t.category, 'HR');
+      expect(t.status, 'In Review');
+      expect(t.priority, 'Low');
+    });
+  });
 }
