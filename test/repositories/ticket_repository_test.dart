@@ -95,5 +95,169 @@ void main() {
       expect(tickets.first.createdAt, isNotNull);
       expect(tickets.first.createdAt!.isUtc, isFalse);
     });
+
+    // ── getTicket ──────────────────────────────────────────────────────────────
+
+    group('getTicket', () {
+      // getTicket returns the raw map (not a typed object) because the detail
+      // screen parses it into TicketDetailData separately. Confirm the correct
+      // endpoint is called and the raw map is returned unchanged.
+      test('calls correct endpoint and returns raw map', () async {
+        final raw = _ticketJson(id: 'detail-1');
+        when(
+          () => mockClient.get('/api/v1/tickets/detail-1'),
+        ).thenAnswer((_) async => raw);
+
+        final result = await repo.getTicket('detail-1');
+
+        expect(result['ticket_id'], 'detail-1');
+      });
+    });
+
+    // ── createTicket ───────────────────────────────────────────────────────────
+
+    group('createTicket', () {
+      // The most critical createTicket constraint: due_at must be sent as a
+      // local YYYY-MM-DD string. Sending a UTC ISO timestamp shifts the date
+      // for users in UTC+ timezones (e.g. midnight SGT becomes the previous
+      // day in UTC). Using the local calendar date avoids this bug.
+      test(
+        'sends YYYY-MM-DD local date for due_at — not a UTC timestamp',
+        () async {
+          final capturedBodies = <Map<String, dynamic>>[];
+
+          when(
+            () => mockClient.post(
+              '/api/v1/tickets',
+              any(that: isA<Map<String, dynamic>>()),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedBodies.add(
+              invocation.positionalArguments[1] as Map<String, dynamic>,
+            );
+            return {'ticket_id': 'new-1'};
+          });
+
+          // UTC+8 locale: midnight local = previous day in UTC.
+          // The date string must reflect the LOCAL date (2025-08-01), not UTC.
+          final dueAt = DateTime(2025, 8, 1); // local midnight
+
+          await repo.createTicket(
+            subject: 'Test',
+            categoryId: 'cat-1',
+            dueAt: dueAt,
+          );
+
+          expect(capturedBodies.length, 1);
+          final sent = capturedBodies.first['due_at'] as String;
+          // Expect exactly 10 characters: YYYY-MM-DD
+          expect(sent.length, 10);
+          expect(sent, '2025-08-01');
+        },
+      );
+
+      // When the user leaves the due date picker empty, due_at must be absent
+      // from the request body entirely (not sent as null or empty string).
+      test('omits due_at from body when not provided', () async {
+        final capturedBodies = <Map<String, dynamic>>[];
+
+        when(
+          () => mockClient.post(
+            '/api/v1/tickets',
+            any(that: isA<Map<String, dynamic>>()),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedBodies.add(
+            invocation.positionalArguments[1] as Map<String, dynamic>,
+          );
+          return {'ticket_id': 'new-2'};
+        });
+
+        await repo.createTicket(subject: 'No due date', categoryId: 'cat-1');
+
+        expect(capturedBodies.first.containsKey('due_at'), isFalse);
+      });
+
+      // source = 'mobile' tells the backend which client created the ticket.
+      // It must always be present so the officer dashboard can filter by origin.
+      test('always includes source = mobile', () async {
+        final capturedBodies = <Map<String, dynamic>>[];
+
+        when(
+          () => mockClient.post(any(), any(that: isA<Map<String, dynamic>>())),
+        ).thenAnswer((invocation) async {
+          capturedBodies.add(
+            invocation.positionalArguments[1] as Map<String, dynamic>,
+          );
+          return {'ticket_id': 'new-3'};
+        });
+
+        await repo.createTicket(subject: 'S', categoryId: 'cat-2');
+
+        expect(capturedBodies.first['source'], 'mobile');
+      });
+
+      // An empty description string should be treated as "no description" and
+      // omitted from the request body to avoid storing blank entries.
+      test('omits description when blank', () async {
+        final capturedBodies = <Map<String, dynamic>>[];
+
+        when(
+          () => mockClient.post(any(), any(that: isA<Map<String, dynamic>>())),
+        ).thenAnswer((invocation) async {
+          capturedBodies.add(
+            invocation.positionalArguments[1] as Map<String, dynamic>,
+          );
+          return {'ticket_id': 'new-4'};
+        });
+
+        await repo.createTicket(
+          subject: 'S',
+          categoryId: 'cat-3',
+          description: '',
+        );
+
+        expect(capturedBodies.first.containsKey('description'), isFalse);
+      });
+
+      // A non-empty description must be included in the request body verbatim
+      // so the officer sees the full context when reviewing the ticket.
+      test('includes description when non-empty', () async {
+        final capturedBodies = <Map<String, dynamic>>[];
+
+        when(
+          () => mockClient.post(any(), any(that: isA<Map<String, dynamic>>())),
+        ).thenAnswer((invocation) async {
+          capturedBodies.add(
+            invocation.positionalArguments[1] as Map<String, dynamic>,
+          );
+          return {'ticket_id': 'new-5'};
+        });
+
+        await repo.createTicket(
+          subject: 'S',
+          categoryId: 'cat-4',
+          description: 'Detailed description here.',
+        );
+
+        expect(
+          capturedBodies.first['description'],
+          'Detailed description here.',
+        );
+      });
+
+      // Server-side validation errors (e.g. 422 Unprocessable Entity) are
+      // thrown by ApiClient and must surface to the create-ticket screen.
+      test('propagates exception from ApiClient', () {
+        when(
+          () => mockClient.post(any(), any(that: isA<Map<String, dynamic>>())),
+        ).thenThrow(Exception('POST failed: 500'));
+
+        expect(
+          () => repo.createTicket(subject: 'S', categoryId: 'cat-5'),
+          throwsException,
+        );
+      });
+    });
   });
 }
