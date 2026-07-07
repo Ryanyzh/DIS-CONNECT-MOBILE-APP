@@ -193,4 +193,34 @@ void main() {
       expect(ticket.id, '');
     });
   });
+
+  // ── toJson round-trip ────────────────────────────────────────────────────────
+
+  group('Ticket.toJson', () {
+    // toJson is used when caching tickets locally. Confirm that all scalar
+    // fields survive a fromJson → toJson cycle without mutation or loss.
+    test(
+      'round-trips through fromJson → toJson preserving all scalar fields',
+      () {
+        final original = Ticket.fromJson({
+          'ticket_id': 'rt-1',
+          'ticket_code': 'TKT-RT-001',
+          'subject': 'Round-trip test',
+          'category': 'Policy',
+          'status': 'Open',
+          'priority': 'Low',
+          'created_at': '2025-07-01T12:00:00Z',
+        });
+
+        final json = original.toJson();
+
+        expect(json['id'], 'rt-1');
+        expect(json['ticket_code'], 'TKT-RT-001');
+        expect(json['subject'], 'Round-trip test');
+        expect(json['category'], 'Policy');
+        expect(json['status'], 'Open');
+        expect(json['priority'], 'Low');
+      },
+    );
+  });
 }
