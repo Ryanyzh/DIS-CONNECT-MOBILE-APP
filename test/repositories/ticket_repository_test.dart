@@ -260,4 +260,76 @@ void main() {
       });
     });
   });
+
+  // ── getStatuses / getCategories / getPriorities ────────────────────────────
+
+  group('getStatuses', () {
+    // getStatuses drives the status picker in the officer update-status flow.
+    // Verify the list response is cast to the expected typed list.
+    test('casts list response to List<Map>', () async {
+      when(() => mockClient.get('/api/v1/tickets/statuses')).thenAnswer(
+        (_) async => [
+          {'id': 's1', 'status_name': 'Open'},
+          {'id': 's2', 'status_name': 'Closed'},
+        ],
+      );
+
+      final statuses = await repo.getStatuses();
+
+      expect(statuses.length, 2);
+      expect(statuses[0]['status_name'], 'Open');
+    });
+  });
+
+  group('getCategories', () {
+    // getCategories populates the category dropdown in the create-ticket form.
+    test('returns list of category maps', () async {
+      when(() => mockClient.get('/api/v1/categories')).thenAnswer(
+        (_) async => [
+          {'id': 'c1', 'category_name': 'Finance'},
+        ],
+      );
+
+      final categories = await repo.getCategories();
+
+      expect(categories.first['category_name'], 'Finance');
+    });
+  });
+
+  group('getPriorities', () {
+    // getPriorities populates the priority dropdown in the create-ticket form.
+    test('returns list of priority maps', () async {
+      when(() => mockClient.get('/api/v1/priorities')).thenAnswer(
+        (_) async => [
+          {'id': 'p1', 'priority_name': 'High', 'color_code': '#EF4444'},
+        ],
+      );
+
+      final priorities = await repo.getPriorities();
+
+      expect(priorities.first['priority_name'], 'High');
+    });
+  });
+
+  // ── getMessages ────────────────────────────────────────────────────────────
+
+  group('getMessages', () {
+    // The messages endpoint returns a 'messages' envelope. The repository
+    // unwraps it and returns the inner list. Verify count and a sample field.
+    test('returns messages from nested messages key', () async {
+      when(() => mockClient.get('/api/v1/tickets/t1/messages')).thenAnswer(
+        (_) async => {
+          'messages': [
+            {'id': 'm1', 'message_text': 'Hello'},
+            {'id': 'm2', 'message_text': 'Update'},
+          ],
+        },
+      );
+
+      final messages = await repo.getMessages('t1');
+
+      expect(messages.length, 2);
+      expect(messages[0]['message_text'], 'Hello');
+    });
+  });
 }
