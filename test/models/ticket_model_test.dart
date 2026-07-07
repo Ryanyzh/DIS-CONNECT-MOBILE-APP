@@ -74,5 +74,123 @@ void main() {
 
       expect(ticket.title, 'Exchange programme query');
     });
+
+    // ── Bare string fields ─────────────────────────────────────────────────
+
+    // Non-enriched list endpoints return status and category as plain strings,
+    // not nested maps. The resolver must handle both shapes transparently.
+    test('handles bare string status (non-enriched response)', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 'xyz',
+        'subject': 'Test',
+        'category': 'Internship',
+        'status': 'In Review',
+        'priority': '',
+        'created_at': null,
+      });
+
+      expect(ticket.status, 'In Review');
+      expect(ticket.category, 'Internship');
+      expect(ticket.createdAt, isNull);
+    });
+
+    // An enriched map with no recognised name key (e.g. empty {}) should
+    // resolve to an empty string rather than throwing or returning null.
+    test('resolves empty map field to empty string', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 't3',
+        'subject': 'Test',
+        'category': {},
+        'status': {},
+        'priority': {},
+      });
+
+      expect(ticket.category, '');
+      expect(ticket.status, '');
+      expect(ticket.priority, '');
+    });
+
+    // ── Date parsing ───────────────────────────────────────────────────────
+
+    // The API always returns UTC timestamps. The model converts them to local
+    // time so the UI displays the user's timezone rather than UTC.
+    test('converts UTC created_at to local time', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 't4',
+        'subject': 'X',
+        'category': '',
+        'status': '',
+        'priority': '',
+        'created_at': '2025-06-01T00:00:00Z',
+      });
+
+      expect(ticket.createdAt, isNotNull);
+      expect(ticket.createdAt!.isUtc, isFalse);
+    });
+
+    // Tickets fetched from a list before they are fully created may have a
+    // null date. The model must not throw and must return null.
+    test('returns null createdAt for null date field', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 't5',
+        'subject': 'X',
+        'category': '',
+        'status': '',
+        'priority': '',
+        'created_at': null,
+      });
+
+      expect(ticket.createdAt, isNull);
+    });
+
+    // updatedAt is optional — tickets that have never been edited will omit
+    // the field entirely.
+    test('returns null updatedAt when field is absent', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 't6',
+        'subject': 'X',
+        'category': '',
+        'status': '',
+        'priority': '',
+      });
+
+      expect(ticket.updatedAt, isNull);
+    });
+
+    // A corrupt or incorrectly formatted date string must not crash the
+    // parser — DateTime.tryParse returns null, which the model propagates.
+    test('returns null for unparseable date string', () {
+      final ticket = Ticket.fromJson({
+        'ticket_id': 't7',
+        'subject': 'X',
+        'category': '',
+        'status': '',
+        'priority': '',
+        'created_at': 'not-a-date',
+      });
+
+      expect(ticket.createdAt, isNull);
+    });
+
+    // ── Null safety / missing fields ───────────────────────────────────────
+
+    // A partial JSON object (e.g. a lightweight list projection) must not
+    // throw. All text fields should default to empty strings.
+    test('produces empty strings for all missing text fields', () {
+      final ticket = Ticket.fromJson({'ticket_id': 't8'});
+
+      expect(ticket.title, '');
+      expect(ticket.category, '');
+      expect(ticket.status, '');
+      expect(ticket.priority, '');
+      expect(ticket.displayId, '');
+    });
+
+    // If neither 'ticket_id' nor 'id' is present the model should return an
+    // empty string rather than throwing a null-cast error.
+    test('produces empty id when both ticket_id and id are absent', () {
+      final ticket = Ticket.fromJson({'subject': 'No id ticket'});
+      expect(ticket.id, '');
+    });
   });
 }
