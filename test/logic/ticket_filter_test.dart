@@ -178,4 +178,65 @@ void main() {
       expect(r.first.id, '2');
     });
   });
+
+  // ── active / resolved partitioning ────────────────────────────────────────
+
+  group('active and resolved partitioning', () {
+    final tickets = [
+      _t(id: '1', status: 'Open'),
+      _t(id: '2', status: 'In Review'),
+      _t(id: '3', status: 'Resolved'),
+      _t(id: '4', status: 'Closed'),
+    ];
+
+    // The "Active" tab must show only tickets that still require action.
+    // Resolved and Closed tickets belong in the "Resolved" tab.
+    test('active excludes resolved and closed', () {
+      final a = active(tickets, '');
+      expect(a.map((t) => t.id), containsAll(['1', '2']));
+      expect(a.map((t) => t.id), isNot(contains('3')));
+      expect(a.map((t) => t.id), isNot(contains('4')));
+    });
+
+    // The "Resolved" tab must show only terminal-state tickets.
+    test('resolved includes only resolved and closed', () {
+      final r = resolved(tickets, '');
+      expect(r.map((t) => t.id), containsAll(['3', '4']));
+      expect(r.length, 2);
+    });
+
+    // Every ticket must appear in exactly one tab — the two lists are a
+    // strict partition of the visible set.
+    test('active + resolved = visible (no query)', () {
+      final a = active(tickets, '');
+      final r = resolved(tickets, '');
+      expect(a.length + r.length, tickets.length);
+    });
+
+    // Partitioning must also work correctly after a search filter is applied.
+    // Filtering narrows the visible set, then the split is applied to that.
+    test('active + resolved = visible (with query)', () {
+      final a = active(tickets, 'open');
+      final r = resolved(tickets, 'open');
+      // "Open" matches 1 ticket in active, none in resolved.
+      expect(a.length + r.length, 1);
+    });
+
+    // A user with no tickets at all must see two empty lists, not a crash.
+    test('empty ticket list produces empty active and resolved', () {
+      expect(active([], ''), isEmpty);
+      expect(resolved([], ''), isEmpty);
+    });
+
+    // When every ticket has a terminal status, the active tab must be empty.
+    // The resolved tab must contain all tickets.
+    test('all-done list produces empty active list', () {
+      final allDone = [
+        _t(id: 'x', status: 'Resolved'),
+        _t(id: 'y', status: 'Closed'),
+      ];
+      expect(active(allDone, ''), isEmpty);
+      expect(resolved(allDone, ''), hasLength(2));
+    });
+  });
 }
