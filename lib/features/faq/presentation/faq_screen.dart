@@ -74,6 +74,16 @@ class _FaqScreenState extends State<FaqScreen> {
     }
   }
 
+  // Called by RefreshIndicator — keeps existing entries visible while fetching.
+  Future<void> _refresh() async {
+    try {
+      final faqs = await FaqRepository(ApiClient()).getFaqs();
+      if (mounted) setState(() { _faqs = faqs; _error = null; });
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Failed to refresh FAQs.');
+    }
+  }
+
   List<FaqEntry> get _filtered {
     var list = _faqs;
     if (_activeCategory != 'All') {
@@ -237,7 +247,10 @@ class _FaqScreenState extends State<FaqScreen> {
                       ),
                     ),
                   )
-                : ListView(
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    color: const Color(0xFF4C39F2),
+                    child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                     children: [
                       // When searching, show flat list; otherwise group by category
@@ -265,6 +278,7 @@ class _FaqScreenState extends State<FaqScreen> {
                           ),
                         ),
                     ],
+                  ),
                   ),
           ),
         ],
