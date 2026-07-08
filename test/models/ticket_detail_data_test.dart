@@ -209,4 +209,74 @@ void main() {
       expect(d.closedAt, isNull);
     });
   });
+
+  // ── Officer ────────────────────────────────────────────────────────────────
+
+  group('TicketDetailData.fromJson — officer', () {
+    // The enriched response nests the assigned officer in an object.
+    // All three fields (name, role, initials) are used in the officer card.
+    test('reads officer name from nested assigned_officer map', () {
+      final json = _base()
+        ..['assigned_officer'] = {
+          'name': 'Alice Tan',
+          'role': 'HR Manager',
+          'initials': 'AT',
+        };
+      final d = TicketDetailData.fromJson(json);
+      expect(d.officerName, 'Alice Tan');
+      expect(d.officerRole, 'HR Manager');
+      expect(d.officerInitials, 'AT');
+    });
+
+    // Flat officer fields are used by older API response shapes.
+    test('falls back to flat officer_name field', () {
+      final json = _base()
+        ..['officer_name'] = 'Bob Lim'
+        ..['officer_role'] = 'Admin'
+        ..['officer_initials'] = 'BL';
+      final d = TicketDetailData.fromJson(json);
+      expect(d.officerName, 'Bob Lim');
+      expect(d.officerInitials, 'BL');
+    });
+
+    // An unassigned ticket has no officer. The officer card must be hidden
+    // when all officer fields are null.
+    test('officer fields are null when absent', () {
+      final d = TicketDetailData.fromJson(_base());
+      expect(d.officerName, isNull);
+      expect(d.officerRole, isNull);
+    });
+  });
+
+  // ── Escalation ─────────────────────────────────────────────────────────────
+
+  group('TicketDetailData.fromJson — escalation', () {
+    // Most tickets are never escalated; the flag should default to false
+    // so the escalation banner is hidden.
+    test('isEscalated defaults to false', () {
+      final d = TicketDetailData.fromJson(_base());
+      expect(d.isEscalated, isFalse);
+    });
+
+    // When the backend marks a ticket as escalated, the UI shows a banner.
+    test('isEscalated is true when flag set', () {
+      final json = _base()..['is_escalated'] = true;
+      final d = TicketDetailData.fromJson(json);
+      expect(d.isEscalated, isTrue);
+    });
+
+    // The escalation object carries the recipient's name and the timestamp,
+    // both shown in the escalation banner.
+    test('reads escalated_to_name from nested escalation map', () {
+      final json = _base()
+        ..['is_escalated'] = true
+        ..['escalation'] = {
+          'to_name': 'Senior Officer',
+          'escalated_at': '2025-07-01T09:00:00Z',
+        };
+      final d = TicketDetailData.fromJson(json);
+      expect(d.escalatedToName, 'Senior Officer');
+      expect(d.escalatedAt, isNotNull);
+    });
+  });
 }
