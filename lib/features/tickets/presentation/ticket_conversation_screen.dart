@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
@@ -12,6 +14,7 @@ import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 class _Message {
   final String messageId;
   final String senderName;
+  final String senderRole;
   final bool isMe;
   final DateTime timestamp;
   final String content;
@@ -20,6 +23,7 @@ class _Message {
   const _Message({
     required this.messageId,
     required this.senderName,
+    required this.senderRole,
     required this.isMe,
     required this.timestamp,
     required this.content,
@@ -31,9 +35,10 @@ class _Message {
     return _Message(
       messageId: json['message_id'] as String? ?? '',
       senderName: json['sender_name'] as String? ?? 'Unknown',
+      senderRole: json['sender_role'] as String? ?? '',
       isMe: json['sender_id'] == currentUid,
       timestamp:
-          (DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal()) ??
+          DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal() ??
           DateTime.now(),
       content: json['message_text'] as String? ?? '',
       attachmentNames: attachments
@@ -64,39 +69,59 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
   bool _loading = true;
   bool _sending = false;
 
-  String get _currentUid =>
-      FirebaseAuth.instance.currentUser?.uid ?? '';
+  // RTDB subscription — cancelled in dispose().
+  StreamSubscription<DatabaseEvent>? _rtdbSub;
+
+  String get _currentUid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   late final TicketRepository _repo = TicketRepository(ApiClient());
 
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    _subscribeToMessages();
   }
 
   @override
   void dispose() {
+    _rtdbSub?.cancel();
     _replyController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    try {
-      final raw = await _repo.getMessages(widget.ticketId);
-      final uid = _currentUid;
-      if (mounted) {
-        setState(() {
-          _messages = raw.map((m) => _Message.fromJson(m, uid)).toList();
-          _loading = false;
-        });
-        _scrollToBottom();
+  // Listen to ticket_messages/{ticketId} in Realtime Database.
+  // onValue fires immediately with the full snapshot, then again on any change.
+  void _subscribeToMessages() {
+    final uid = _currentUid;
+    final ref = FirebaseDatabase.instance.ref('ticket_messages/${widget.ticketId}');
+
+    _rtdbSub = ref.onValue.listen((event) {
+      if (!mounted) return;
+
+      final raw = event.snapshot.value;
+      if (raw == null) {
+        setState(() { _messages = []; _loading = false; });
+        return;
       }
-    } catch (e) {
-      debugPrint('Failed to load messages: $e');
+
+      // RTDB returns Map<dynamic, dynamic> keyed by message ID.
+      final messages = (raw as Map<dynamic, dynamic>)
+          .values
+          .map((v) => Map<String, dynamic>.from(v as Map))
+          .toList()
+        ..sort((a, b) =>
+            (a['created_at'] as String).compareTo(b['created_at'] as String));
+
+      setState(() {
+        _messages = messages.map((m) => _Message.fromJson(m, uid)).toList();
+        _loading = false;
+      });
+      _scrollToBottom();
+    }, onError: (e) {
+      debugPrint('RTDB message listener error: $e');
       if (mounted) setState(() => _loading = false);
-    }
+    });
   }
 
   Future<void> _send() async {
@@ -106,11 +131,11 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
     _replyController.clear();
     FocusScope.of(context).unfocus();
     try {
+      // The backend writes the message to RTDB — the listener above will
+      // automatically pick it up without a manual re-fetch.
       await _repo.sendMessage(widget.ticketId, text);
-      await _loadMessages();
     } catch (e) {
       debugPrint('Failed to send message: $e');
-      // Restore the text so the user doesn't lose it
       _replyController.text = text;
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -211,14 +236,29 @@ class _MessageCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  message.senderName,
-                  style: AppTypography.bodySm.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: message.isMe
-                        ? const Color(0xFF4C39F2)
-                        : AppColors.ink,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.senderName,
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: message.isMe
+                            ? const Color(0xFF4C39F2)
+                            : AppColors.ink,
+                      ),
+                    ),
+                    if (message.senderRole.isNotEmpty)
+                      Text(
+                        message.senderRole == 'hr' ? 'HR Officer' : 'Scholar',
+                        style: AppTypography.caption.copyWith(
+                          color: message.isMe
+                              ? const Color(0xFF9A32F8)
+                              : AppColors.mute,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
