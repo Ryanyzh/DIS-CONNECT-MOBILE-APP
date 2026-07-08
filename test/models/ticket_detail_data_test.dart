@@ -279,4 +279,79 @@ void main() {
       expect(d.escalatedAt, isNotNull);
     });
   });
+
+  // ── Attachments ────────────────────────────────────────────────────────────
+
+  group('TicketDetailData.fromJson — attachments', () {
+    // A ticket with no attachments must return an empty list, not null,
+    // so the attachments section renders cleanly without null guards.
+    test('attachments defaults to empty list', () {
+      final d = TicketDetailData.fromJson(_base());
+      expect(d.attachments, isEmpty);
+    });
+
+    // Each attachment entry is delegated to AttachmentFile.fromJson.
+    // Verify the list length and spot-check the first entry's fields.
+    test('parses attachment list', () {
+      final json = _base()
+        ..['attachments'] = [
+          {'file_name': 'receipt.pdf', 'file_size': 204800},
+          {'file_name': 'form.docx', 'file_size': 51200},
+        ];
+      final d = TicketDetailData.fromJson(json);
+      expect(d.attachments.length, 2);
+      expect(d.attachments[0].name, 'receipt.pdf');
+      // 204800 bytes ÷ 1024 = 200 KB exactly.
+      expect(d.attachments[0].sizeKb, 200);
+    });
+  });
+
+  // ── AttachmentFile.fromJson ────────────────────────────────────────────────
+  // AttachmentFile is a lightweight value type parsed from each element of
+  // the 'attachments' array. Its only non-trivial logic is the bytes → KB
+  // ceiling conversion.
+
+  group('AttachmentFile.fromJson', () {
+    // The UI displays size in KB. Verify that bytes are divided by 1024
+    // and exact multiples are not rounded up unnecessarily.
+    test('parses file_name and converts file_size to KB (ceiling)', () {
+      final a = AttachmentFile.fromJson({
+        'file_name': 'doc.pdf',
+        'file_size': 153600,
+      });
+      expect(a.name, 'doc.pdf');
+      // 153600 ÷ 1024 = 150.0 → 150 KB.
+      expect(a.sizeKb, 150);
+    });
+
+    // A file that is not a whole number of KB must be rounded up so the
+    // displayed size is never less than the actual size.
+    test('rounds up partial KB', () {
+      final a = AttachmentFile.fromJson({
+        'file_name': 'tiny.txt',
+        'file_size': 1025,
+      });
+      // 1025 ÷ 1024 = 1.00097… → ceiling = 2 KB.
+      expect(a.sizeKb, 2);
+    });
+
+    // Some API responses use 'name' / 'size_bytes' keys instead of
+    // 'file_name' / 'file_size'. Both shapes must work.
+    test('falls back to name field when file_name is absent', () {
+      final a = AttachmentFile.fromJson({
+        'name': 'fallback.png',
+        'size_bytes': 2048,
+      });
+      expect(a.name, 'fallback.png');
+      expect(a.sizeKb, 2);
+    });
+
+    // A completely empty map (e.g. a malformed API response) must not throw;
+    // it should return safe zero/empty defaults.
+    test('returns empty name and zero KB for empty json', () {
+      final a = AttachmentFile.fromJson({});
+      expect(a.name, '');
+      expect(a.sizeKb, 0);
+    });
+  });
 }
