@@ -153,6 +153,17 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
   }
 
+  // Called by RefreshIndicator — keeps the existing list visible while fetching.
+  Future<void> _refresh() async {
+    try {
+      final entries =
+          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      if (mounted) setState(() => _announcements = entries);
+    } catch (e) {
+      debugPrint('Failed to refresh announcements: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sorted = [..._announcements]
@@ -163,7 +174,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
-            : CustomScrollView(
+            : RefreshIndicator(
+                onRefresh: _refresh,
+                color: const Color(0xFF4C39F2),
+                child: CustomScrollView(
                 slivers: [
                   // ── App bar ───────────────────────────────────────────
                   SliverAppBar(
@@ -213,6 +227,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                     ),
                 ],
               ),
+            ),
       ),
     );
   }
