@@ -112,4 +112,102 @@ void main() {
       expect(find.textContaining('Jun'), findsNothing);
     });
   });
+
+  // ── Interactions ──────────────────────────────────────────────────────────
+
+  group('RecentTicketsSection — tap callbacks', () {
+    // Tapping a ticket row must fire onTicketTap with the correct Ticket
+    // object so the caller can navigate to the right detail screen.
+    testWidgets(
+      'calls onTicketTap with the correct ticket when a row is tapped',
+      (tester) async {
+        Ticket? tapped;
+        final ticket = _ticket(id: 'abc', title: 'Scholarship Extension');
+
+        await tester.pumpWidget(
+          _wrap(
+            RecentTicketsSection(
+              tickets: [ticket],
+              onTicketTap: (t) => tapped = t,
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Scholarship Extension'));
+        await tester.pump();
+
+        expect(tapped, isNotNull);
+        expect(tapped!.id, 'abc');
+      },
+    );
+
+    // Tapping 'View all' must call the onViewAll callback so the home screen
+    // can navigate to the full ticket list.
+    testWidgets('calls onViewAll when View all is tapped', (tester) async {
+      var called = false;
+
+      await tester.pumpWidget(
+        _wrap(
+          RecentTicketsSection(
+            tickets: const [],
+            onViewAll: () => called = true,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('View all'));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+
+    // onViewAll = null must not crash if the parent hasn't wired up a handler
+    // (e.g. on a screen where navigation hasn't been set up yet).
+    testWidgets(
+      'does not crash when onViewAll is null and View all is tapped',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(RecentTicketsSection(tickets: const [], onViewAll: null)),
+        );
+        await tester.tap(find.text('View all'));
+        await tester.pump();
+        // Reaching here without exception means the null guard works.
+      },
+    );
+  });
+
+  // ── Multiple tickets ──────────────────────────────────────────────────────
+
+  group('RecentTicketsSection — multiple tickets', () {
+    // All provided tickets must appear — none should be silently dropped due
+    // to a shrinkWrap or itemCount bug.
+    testWidgets('renders every ticket in the list', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          RecentTicketsSection(
+            tickets: [
+              _ticket(id: '1', title: 'Alpha'),
+              _ticket(id: '2', title: 'Beta'),
+              _ticket(id: '3', title: 'Gamma'),
+            ],
+          ),
+        ),
+      );
+      expect(find.text('Alpha'), findsOneWidget);
+      expect(find.text('Beta'), findsOneWidget);
+      expect(find.text('Gamma'), findsOneWidget);
+    });
+
+    // When multiple tickets are present the empty-state message must not show.
+    testWidgets('hides the empty-state message when tickets are present', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          RecentTicketsSection(tickets: [_ticket(title: 'Leave Application')]),
+        ),
+      );
+      expect(find.text('No recent tickets'), findsNothing);
+    });
+  });
 }
