@@ -76,4 +76,106 @@ void main() {
       expect(find.text('Pending Approval'), findsOneWidget);
     });
   });
+
+  // ── ticketStatusStyle() ───────────────────────────────────────────────────
+  // Pure function — no widget pumping needed. Each status maps to a specific
+  // colour palette; these colours drive badge background and text colour across
+  // every screen that shows a ticket status, so regressions here affect the
+  // whole app's visual language.
+
+  group('ticketStatusStyle() — colour mapping', () {
+    // Blue = "active review in progress" — calming, informational.
+    test('In Review → blue badge and text colours', () {
+      final s = ticketStatusStyle('In Review');
+      expect(s.badgeBg, const Color(0xFFDBEAFE));
+      expect(s.badgeText, const Color(0xFF1D4ED8));
+    });
+
+    // Orange = "awaiting scholar action" — draws attention without alarm.
+    test('Waiting → orange badge and text colours', () {
+      final s = ticketStatusStyle('Waiting');
+      expect(s.badgeBg, const Color(0xFFFFEDD5));
+      expect(s.badgeText, const Color(0xFFEA580C));
+    });
+
+    // Purple = matches the app's primary brand colour for newly created tickets.
+    test('Open → purple badge and text colours', () {
+      final s = ticketStatusStyle('Open');
+      expect(s.badgeBg, const Color(0xFFEDE9FE));
+      expect(s.badgeText, const Color(0xFF7C3AED));
+    });
+
+    // Green = positive outcome, ticket fully addressed.
+    test('Resolved → green badge and text colours', () {
+      final s = ticketStatusStyle('Resolved');
+      expect(s.badgeBg, const Color(0xFFD1FAE5));
+      expect(s.badgeText, const Color(0xFF059669));
+    });
+
+    // Gray = neutral / archived — closed tickets should not compete for
+    // attention with active ones.
+    test('Closed (default) → gray badge and text colours', () {
+      final s = ticketStatusStyle('Closed');
+      expect(s.badgeBg, const Color(0xFFF1F5F9));
+      expect(s.badgeText, const Color(0xFF64748B));
+    });
+
+    // Unknown future status values fall to the same neutral gray so the UI
+    // never breaks when the backend adds a new status.
+    test('unknown status → gray fallback colours', () {
+      final s = ticketStatusStyle('Unknown Status');
+      expect(s.badgeBg, const Color(0xFFF1F5F9));
+      expect(s.badgeText, const Color(0xFF64748B));
+    });
+
+    // API responses may use different capitalisation; the switch is lowercase-
+    // normalised so 'in review' and 'In Review' map to the same palette.
+    test('match is case-insensitive', () {
+      expect(
+        ticketStatusStyle('in review').badgeBg,
+        ticketStatusStyle('In Review').badgeBg,
+      );
+      expect(
+        ticketStatusStyle('RESOLVED').badgeBg,
+        ticketStatusStyle('resolved').badgeBg,
+      );
+    });
+  });
+
+  // ── statusSortOrder() ─────────────────────────────────────────────────────
+  // Controls the order in which status groups appear in the ticket list.
+  // "In Review" (requires active attention) surfaces first; archived tickets
+  // sink to the bottom. Changing this order would re-arrange every ticket list.
+
+  group('statusSortOrder() — sort priority', () {
+    // In Review tickets need HR attention right now — they must appear first.
+    test('In Review has the lowest sort order (0)', () {
+      expect(statusSortOrder('In Review'), 0);
+    });
+
+    test('Waiting is second (1)', () {
+      expect(statusSortOrder('Waiting'), 1);
+    });
+
+    test('Open is third (2)', () {
+      expect(statusSortOrder('Open'), 2);
+    });
+
+    test('Resolved is fourth (3)', () {
+      expect(statusSortOrder('Resolved'), 3);
+    });
+
+    // Closed and any unknown status share the lowest-priority slot (4).
+    test('Closed / unknown status has the highest sort order (4)', () {
+      expect(statusSortOrder('Closed'), 4);
+      expect(statusSortOrder('Archived'), 4);
+    });
+
+    // Sorting uses the lowercased form internally, so mixed-case inputs must
+    // produce the same sort order as canonical ones.
+    test('sort order is case-insensitive', () {
+      expect(statusSortOrder('in review'), statusSortOrder('In Review'));
+      expect(statusSortOrder('WAITING'), statusSortOrder('Waiting'));
+    });
+  });
 }
