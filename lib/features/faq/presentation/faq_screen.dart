@@ -1,6 +1,8 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
+import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/faq/data/faq_repository.dart';
 
 const _categories = [
@@ -43,14 +45,19 @@ class _FaqScreenState extends State<FaqScreen> {
   String _search = '';
   final _searchController = TextEditingController();
 
+  StreamSubscription<QuerySnapshot>? _firestoreSub;
+  bool _firstSnapshot = true;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _subscribeToChanges();
   }
 
   @override
   void dispose() {
+    _firestoreSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -74,7 +81,23 @@ class _FaqScreenState extends State<FaqScreen> {
     }
   }
 
-  // Called by RefreshIndicator — keeps existing entries visible while fetching.
+  // Firestore listener is used only as a change signal — not as the data
+  // source. When HR creates/updates a FAQ, the snapshot fires and we
+  // re-fetch the full list from the REST API.
+  void _subscribeToChanges() {
+    _firestoreSub = FirebaseFirestore.instance
+        .collection('faqs')
+        .snapshots()
+        .listen((snapshot) {
+      if (_firstSnapshot) { _firstSnapshot = false; return; }
+      if (!mounted) return;
+      _refresh();
+    }, onError: (e) {
+      debugPrint('Firestore FAQs listener error: $e');
+    });
+  }
+
+  // Silently re-fetches in the background; keeps the existing list visible.
   Future<void> _refresh() async {
     try {
       final faqs = await FaqRepository(ApiClient()).getFaqs();

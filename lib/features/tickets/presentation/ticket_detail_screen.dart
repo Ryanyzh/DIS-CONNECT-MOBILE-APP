@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -177,11 +179,48 @@ class TicketDetailScreen extends StatefulWidget {
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
   TicketDetailData? _detail;
   bool _loading = true;
+  bool _liveUpdating = false;
+
+  // Firestore listener — fires whenever the HR side changes the ticket document.
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _firestoreSub;
+  bool _firstSnapshot = true; // Skip the initial emission to avoid a double-fetch.
 
   @override
   void initState() {
     super.initState();
     _load();
+    _subscribeToTicketChanges();
+  }
+
+  @override
+  void dispose() {
+    _firestoreSub?.cancel();
+    super.dispose();
+  }
+
+  // Subscribe to the Firestore ticket document for real-time status updates.
+  // When the HR officer updates the ticket (status, assignment, escalation),
+  // Firestore pushes the change here and we re-fetch the full enriched detail
+  // from the REST API so all nested objects (status_name, officer info, etc.)
+  // are correctly resolved.
+  void _subscribeToTicketChanges() {
+    _firestoreSub = FirebaseFirestore.instance
+        .collection('tickets')
+        .doc(widget.ticketId)
+        .snapshots()
+        .listen((snap) {
+      if (_firstSnapshot) {
+        _firstSnapshot = false; // Ignore the immediate first emission.
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _liveUpdating = true);
+      _load().then((_) {
+        if (mounted) setState(() => _liveUpdating = false);
+      });
+    }, onError: (e) {
+      debugPrint('Firestore ticket listener error: $e');
+    });
   }
 
   Future<void> _load() async {
@@ -223,7 +262,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      appBar: _buildAppBar(context, detail.ticketCode),
+      appBar: _buildAppBar(context, detail.ticketCode, _liveUpdating),
       body: Column(
         children: [
           Expanded(
@@ -284,7 +323,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, String ticketCode) {
+  AppBar _buildAppBar(BuildContext context, String ticketCode, bool liveUpdating) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -303,6 +342,18 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         ),
       ),
       centerTitle: true,
+      // Thin progress bar shown while the live update re-fetch is in flight.
+      bottom: liveUpdating
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(2),
+              child: LinearProgressIndicator(
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  const Color(0xFF6A2FF3).withValues(alpha: 0.35),
+                ),
+              ),
+            )
+          : null,
       actions: [
         IconButton(
           tooltip: 'Conversation',

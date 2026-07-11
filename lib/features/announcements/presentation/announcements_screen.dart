@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -46,6 +48,7 @@ class AnnouncementEntry {
   }
 
   static DateTime _parseDate(dynamic raw) {
+    if (raw is Timestamp) return raw.toDate().toLocal();
     if (raw is String) return DateTime.tryParse(raw)?.toLocal() ?? DateTime.now();
     return DateTime.now();
   }
@@ -131,10 +134,20 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   List<AnnouncementEntry> _announcements = [];
   bool _loading = true;
 
+  StreamSubscription<QuerySnapshot>? _firestoreSub;
+  bool _firstSnapshot = true;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _subscribeToChanges();
+  }
+
+  @override
+  void dispose() {
+    _firestoreSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -153,7 +166,25 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
   }
 
-  // Called by RefreshIndicator — keeps the existing list visible while fetching.
+  // Firestore listener is used only as a change signal — not as the data
+  // source. When the HR side creates/updates an announcement, the snapshot
+  // fires and we re-fetch the full list from the REST API.
+  void _subscribeToChanges() {
+    _firestoreSub = FirebaseFirestore.instance
+        .collection('announcements')
+        .snapshots()
+        .listen((snapshot) {
+      // Skip the first emission — it fires immediately on subscribe and
+      // would cause a redundant fetch alongside the initial _load() call.
+      if (_firstSnapshot) { _firstSnapshot = false; return; }
+      if (!mounted) return;
+      _refresh();
+    }, onError: (e) {
+      debugPrint('Firestore announcements listener error: $e');
+    });
+  }
+
+  // Silently re-fetches in the background; keeps the existing list visible.
   Future<void> _refresh() async {
     try {
       final entries =
