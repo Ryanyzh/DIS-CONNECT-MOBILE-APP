@@ -200,4 +200,84 @@ void main() {
       expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
     });
   });
+
+  // ── D. Authentication flows ───────────────────────────────────────────────
+
+  group('D. Authentication — requires TEST_EMAIL / TEST_PASSWORD', () {
+    // All tests in this group are skipped if credentials were not provided via
+    // --dart-define so CI pipelines without secrets don't fail.
+
+    testWidgets(
+      'correct credentials navigate to the home screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        // If already signed in, sign out first so we test the full login flow.
+        if (find.text('Sign In').evaluate().isEmpty) {
+          await signOut(tester);
+          await tester.pumpAndSettle(const Duration(seconds: 3));
+        }
+
+        await signIn(tester);
+
+        // After a successful login the GoRouter redirects to /home, which
+        // renders the MainShell with 'Home' in the bottom navigation bar.
+        expect(find.text('Home'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'wrong credentials show the Incorrect email or password error',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isEmpty) {
+          await signOut(tester);
+          await tester.pumpAndSettle(const Duration(seconds: 3));
+        }
+
+        // Use an obviously wrong password.
+        await signIn(tester, password: 'definitely_wrong_pw_!@#');
+
+        expect(find.text('Incorrect email or password.'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'after login the Sign Out option is accessible from Profile',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) {
+          await signIn(tester);
+        }
+
+        await tapNavTab(tester, 'Profile');
+
+        // Sign Out button is at the bottom of the profile screen; scroll to it.
+        await tester.drag(
+          find.byType(SingleChildScrollView).last,
+          const Offset(0, -600),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Sign Out'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Sign Out navigates back to the login screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) {
+          await signIn(tester);
+        }
+
+        await signOut(tester);
+
+        expect(find.text('Sign in to your account'), findsOneWidget);
+      },
+    );
+  });
 }
