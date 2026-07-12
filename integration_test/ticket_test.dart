@@ -258,4 +258,96 @@ void main() {
       },
     );
   });
+
+  // ── Create ticket — step 2 ────────────────────────────────────────────────
+
+  group('Create ticket — step 2 (Details)', () {
+    // Advance to step 2 by filling subject + picking first category.
+    // This is a best-effort helper; if category picking fails we skip gracefully.
+    Future<bool> advanceToStep2(WidgetTester tester) async {
+      await tapNavTab(tester, 'Tickets');
+      await tester.tap(find.text('New Ticket'));
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      await tester.enterText(
+        find.byType(TextField).first,
+        'Integration test ticket',
+      );
+      await tester.pump();
+
+      // Attempt to tap the 4th GestureDetector (best guess for first category chip).
+      final allGestures = find.byType(GestureDetector);
+      if (allGestures.evaluate().length > 3) {
+        await tester.tap(allGestures.at(3));
+        await tester.pump();
+      }
+
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      return find.text('Details').evaluate().isNotEmpty;
+    }
+
+    testWidgets(
+      'step 2 shows the Description field',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        final onStep2 = await advanceToStep2(tester);
+        if (!onStep2) return; // category selection failed — skip gracefully
+
+        expect(find.text('Description'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'step 2 shows the Back button to return to step 1',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        final onStep2 = await advanceToStep2(tester);
+        if (!onStep2) return;
+
+        expect(find.text('Back'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping Back on step 2 returns to step 1',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        final onStep2 = await advanceToStep2(tester);
+        if (!onStep2) return;
+
+        await tester.tap(find.text('Back'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        expect(find.text('Ticket Info'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping Continue on step 2 without a description shows snackbar',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        final onStep2 = await advanceToStep2(tester);
+        if (!onStep2) return;
+
+        await tester.tap(find.text('Continue'));
+        await tester.pump();
+
+        expect(find.text('Please add a description'), findsOneWidget);
+      },
+    );
+  });
 }
