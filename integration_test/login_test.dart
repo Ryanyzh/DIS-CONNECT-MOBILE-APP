@@ -70,4 +70,88 @@ void main() {
       expect(find.textContaining('Secured by Firebase'), findsOneWidget);
     });
   });
+
+  // ── B. Login form validation ──────────────────────────────────────────────
+
+  group('B. Login form — empty field validation', () {
+    // The _login() method checks for empty fields BEFORE calling Firebase Auth.
+    // These tests verify client-side validation without needing a network call.
+
+    testWidgets('shows error when both email and password are empty', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.text('Sign In').evaluate().isEmpty) return;
+
+      await tester.tap(find.text('Sign In'));
+      await tester.pump();
+
+      expect(
+        find.text('Please enter your email and password.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows error when email is filled but password is empty', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.byType(TextField).evaluate().length < 2) return;
+
+      await tester.enterText(find.byType(TextField).first, 'user@test.com');
+      await tester.pump();
+      await tester.tap(find.text('Sign In'));
+      await tester.pump();
+
+      expect(
+        find.text('Please enter your email and password.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows error when password is filled but email is empty', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.byType(TextField).evaluate().length < 2) return;
+
+      await tester.enterText(find.byType(TextField).at(1), 'somepassword');
+      await tester.pump();
+      await tester.tap(find.text('Sign In'));
+      await tester.pump();
+
+      expect(
+        find.text('Please enter your email and password.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'error message disappears after a successful login attempt clears it',
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isEmpty) return;
+
+        // Trigger the error.
+        await tester.tap(find.text('Sign In'));
+        await tester.pump();
+        expect(
+          find.text('Please enter your email and password.'),
+          findsOneWidget,
+        );
+
+        // Filling both fields and tapping again should clear the error banner
+        // (in _login the setState sets _errorMessage = null first).
+        await tester.enterText(find.byType(TextField).first, 'x@y.com');
+        await tester.enterText(find.byType(TextField).at(1), 'pw');
+        await tester.tap(find.text('Sign In'));
+        await tester.pump(); // one frame — error is cleared synchronously
+
+        expect(
+          find.text('Please enter your email and password.'),
+          findsNothing,
+        );
+      },
+    );
+  });
 }
