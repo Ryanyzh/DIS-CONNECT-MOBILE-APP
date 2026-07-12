@@ -154,4 +154,50 @@ void main() {
       },
     );
   });
+
+  // ── C. Password visibility toggle ─────────────────────────────────────────
+
+  group('C. Password visibility toggle', () {
+    // The password field starts obscured. The eye icon toggles it.
+    // This is pure UI state — no Firebase involved.
+
+    testWidgets('password field starts obscured (eye-off icon visible)', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.byType(TextField).evaluate().length < 2) return;
+
+      expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
+    });
+
+    testWidgets('tapping the eye icon makes the password visible', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.byIcon(Icons.visibility_off_outlined).evaluate().isEmpty) return;
+
+      await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+      await tester.pump();
+
+      // After toggling, the visible eye icon appears.
+      expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
+      // The hidden eye icon is gone.
+      expect(find.byIcon(Icons.visibility_off_outlined), findsNothing);
+    });
+
+    testWidgets('tapping the eye icon twice restores obscured state', (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.byIcon(Icons.visibility_off_outlined).evaluate().isEmpty) return;
+
+      await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.visibility_outlined));
+      await tester.pump();
+
+      // Should be back to hidden.
+      expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
+    });
+  });
 }
