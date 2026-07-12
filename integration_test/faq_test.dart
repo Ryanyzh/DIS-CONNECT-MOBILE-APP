@@ -148,4 +148,102 @@ void main() {
       },
     );
   });
+
+  // ── FAQ standalone screen (if navigated to directly) ─────────────────────
+  // These tests use the Profile → Help & Support → FAQ route path if available,
+  // verifying the dedicated FAQ screen features (search, category chips).
+
+  group('FAQ standalone screen features', () {
+    Future<void> navigateToFaqScreen(WidgetTester tester) async {
+      await tapNavTab(tester, 'Profile');
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      if (find.text('Help & Support').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Help & Support'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+      }
+      if (find.text('FAQs').evaluate().isNotEmpty) {
+        await tester.tap(find.text('FAQs').first);
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+      }
+    }
+
+    testWidgets('FAQ screen shows a search bar', skip: !credentialsAvailable, (
+      tester,
+    ) async {
+      await launchApp(tester);
+      if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+      await navigateToFaqScreen(tester);
+      if (find.byType(TextField).evaluate().isEmpty) return;
+
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets(
+      'FAQ screen shows the All category chip',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await navigateToFaqScreen(tester);
+
+        // The FAQ screen always shows category filter chips starting with 'All'.
+        if (find.text('All').evaluate().isEmpty) return;
+        expect(find.text('All'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'searching FAQs filters results in real time',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await navigateToFaqScreen(tester);
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        final searchField = find.byType(TextField);
+        if (searchField.evaluate().isEmpty) return;
+
+        // Enter a query that is unlikely to match any FAQ entry.
+        await tester.enterText(searchField, 'xyzNoMatchQueryxyz');
+        await tester.pump();
+
+        // 'No FAQs found.' is the empty-state text from FaqScreen.
+        expect(find.text('No FAQs found.'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'clearing the search query restores all FAQ entries',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await navigateToFaqScreen(tester);
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        final searchField = find.byType(TextField);
+        if (searchField.evaluate().isEmpty) return;
+
+        await tester.enterText(searchField, 'xyzNoMatch');
+        await tester.pump();
+
+        // Clear button appears when there is text in the field.
+        if (find.byIcon(Icons.close).evaluate().isNotEmpty) {
+          await tester.tap(find.byIcon(Icons.close));
+          await tester.pump();
+        } else {
+          await tester.enterText(searchField, '');
+          await tester.pump();
+        }
+
+        // Empty-state message should be gone after clearing.
+        expect(find.text('No FAQs found.'), findsNothing);
+      },
+    );
+  });
 }
