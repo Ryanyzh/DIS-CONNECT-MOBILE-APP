@@ -147,4 +147,29 @@ void main() {
       },
     );
   });
+
+  // ── Quick actions on home ─────────────────────────────────────────────────
+
+  group('Home screen quick actions navigation', () {
+    testWidgets(
+      'tapping New Ticket quick action opens the create ticket screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        // The home screen has a Quick actions section with a "New Ticket" card.
+        // 'New Ticket' text also appears on the ticket list FAB but we are on
+        // the home screen right now.
+        expect(find.text('Quick actions'), findsOneWidget);
+        await tester.tap(find.text('New Ticket').first);
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        // The create ticket screen's AppBar title.
+        expect(find.text('New Ticket'), findsOneWidget);
+        // Its step subtitle uniquely confirms we're on the create screen.
+        expect(find.text('Ticket Info'), findsOneWidget);
+      },
+    );
+  });
 }
