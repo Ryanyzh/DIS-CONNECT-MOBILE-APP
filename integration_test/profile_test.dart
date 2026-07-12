@@ -154,4 +154,56 @@ void main() {
       },
     );
   });
+
+  // ── Sign out flow ─────────────────────────────────────────────────────────
+
+  group('Sign out flow', () {
+    testWidgets(
+      'signing out redirects to the login screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await signOut(tester);
+
+        // GoRouter redirects unauthenticated users to /login.
+        expect(find.text('Sign in to your account'), findsOneWidget);
+        expect(find.text('Sign In'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'after signing out the home screen is no longer accessible',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await signOut(tester);
+
+        // The bottom nav bar (MainShell) should be gone.
+        expect(find.text('Home'), findsNothing);
+        expect(find.text('Tickets'), findsNothing);
+        expect(find.text('Announcements'), findsNothing);
+      },
+    );
+
+    // Sign in again after the sign-out test to confirm re-login works.
+    testWidgets(
+      'can sign back in after signing out',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await signOut(tester);
+
+        // Re-login.
+        await signIn(tester);
+
+        expect(find.text('My Overview'), findsOneWidget);
+      },
+    );
+  });
 }
