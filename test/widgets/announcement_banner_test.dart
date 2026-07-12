@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:disconnect_mobile/features/home/widgets/announcement_banner.dart';
+import 'package:disconnect_mobile/features/announcements/presentation/announcements_screen.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -13,11 +14,12 @@ AnnouncementBanner _banner({
   DateTime? date,
   VoidCallback? onTap,
 }) => AnnouncementBanner(
-  announcement: AnnouncementItem(
+  entry: AnnouncementEntry(
+    id: 'test-id',
     title: title,
     date: date ?? _date,
-    onTap: onTap,
   ),
+  onTap: onTap,
 );
 
 void main() {
@@ -89,29 +91,4 @@ void main() {
     });
   });
 
-  // ── AnnouncementItem model ─────────────────────────────────────────────────
-
-  group('AnnouncementItem', () {
-    // onTap is optional so callers that only need to display the banner
-    // (e.g. in a read-only list) can omit the callback.
-    test('onTap defaults to null', () {
-      final item = AnnouncementItem(title: 'Hello', date: _date);
-      expect(item.onTap, isNull);
-    });
-
-    // Verify that all three fields round-trip correctly through the constructor
-    // so the banner widget receives what the caller intended.
-    test('stores title, date, and onTap correctly', () {
-      var called = false;
-      final item = AnnouncementItem(
-        title: 'Important Notice',
-        date: _date,
-        onTap: () => called = true,
-      );
-      expect(item.title, 'Important Notice');
-      expect(item.date, _date);
-      item.onTap!();
-      expect(called, isTrue);
-    });
-  });
 }

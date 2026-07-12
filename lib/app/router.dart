@@ -131,10 +131,6 @@ final appRouter = GoRouter(
 
     // ── Standalone routes (keep accessible from within the app) ─────────────
     GoRoute(
-      path: '/announcements',
-      builder: (context, state) => const AnnouncementsScreen(),
-    ),
-    GoRoute(
       path: '/faqs',
       builder: (context, state) => const FaqScreen(),
     ),

@@ -92,17 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final ann = _latestAnnouncement;
-    final announcement = ann != null
-        ? AnnouncementItem(
-            title: ann.title,
-            date: ann.date,
-            onTap: () => context.push('/announcements/${ann.id}', extra: ann),
-          )
-        : AnnouncementItem(
-            title: 'Check out the latest announcements',
-            date: DateTime.now(),
-            onTap: () => context.go('/announcements'),
-          );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -159,8 +148,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 28),
 
                     // ── Announcement banner ──────────────────────────────
-                    AnnouncementBanner(announcement: announcement),
-                    const SizedBox(height: 32),
+                    if (ann != null) ...[
+                      AnnouncementBanner(
+                        entry: ann,
+                        onTap: () => context.push('/announcements/${ann.id}', extra: ann),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ],
                 ),
               ),

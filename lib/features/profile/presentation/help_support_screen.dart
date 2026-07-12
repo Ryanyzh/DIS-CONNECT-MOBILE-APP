@@ -171,7 +171,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 iconColor: const Color(0xFF9A32F8),
                 label: 'Submit a Ticket',
                 subtitle: 'Create a ticket for technical issues',
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.push('/tickets/create'),
               ),
             ],
           ),

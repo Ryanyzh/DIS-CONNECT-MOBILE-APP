@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-class AnnouncementItem {
-  final String title;
-  final DateTime date;
-  final VoidCallback? onTap;
-
-  const AnnouncementItem({required this.title, required this.date, this.onTap});
-}
+import 'package:disconnect_mobile/features/announcements/presentation/announcements_screen.dart';
 
 class AnnouncementBanner extends StatelessWidget {
-  final AnnouncementItem announcement;
+  final AnnouncementEntry entry;
+  final VoidCallback? onTap;
 
-  const AnnouncementBanner({super.key, required this.announcement});
+  const AnnouncementBanner({super.key, required this.entry, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +72,7 @@ class AnnouncementBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  announcement.title,
+                  entry.title,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -96,7 +90,7 @@ class AnnouncementBanner extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      DateFormat('d MMM yyyy h:mm a').format(announcement.date),
+                      DateFormat('d MMM yyyy h:mm a').format(entry.date),
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF4C39F2),
@@ -107,7 +101,7 @@ class AnnouncementBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: announcement.onTap,
+                  onTap: onTap,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
