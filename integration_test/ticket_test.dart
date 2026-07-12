@@ -69,4 +69,89 @@ void main() {
       },
     );
   });
+
+  // ── Create ticket — navigation ─────────────────────────────────────────────
+
+  group('Create ticket — navigation', () {
+    // Helper: navigate from ticket list to create ticket screen.
+    Future<void> openCreateTicket(WidgetTester tester) async {
+      await tapNavTab(tester, 'Tickets');
+      await tester.tap(find.text('New Ticket'));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+    }
+
+    testWidgets(
+      'tapping New Ticket opens the create ticket screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openCreateTicket(tester);
+
+        // AppBar title of the create screen.
+        expect(find.text('New Ticket'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'create ticket starts on step 1 — Ticket Info',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openCreateTicket(tester);
+
+        // AppBar subtitle shows the current step title.
+        expect(find.text('Ticket Info'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'create ticket step 1 shows the Subject field',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openCreateTicket(tester);
+
+        expect(find.text('Subject'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'create ticket step 1 shows the Category field',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openCreateTicket(tester);
+
+        expect(find.text('Category'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'back arrow from step 1 returns to the ticket list',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openCreateTicket(tester);
+
+        // Tap the leading back arrow.
+        await tester.tap(find.byIcon(Icons.arrow_back));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        // Back on the ticket list — FAB is visible again.
+        expect(find.text('New Ticket'), findsOneWidget);
+        // Step subtitle is gone.
+        expect(find.text('Ticket Info'), findsNothing);
+      },
+    );
+  });
 }
