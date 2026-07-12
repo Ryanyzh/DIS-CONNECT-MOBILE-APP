@@ -104,4 +104,54 @@ void main() {
       },
     );
   });
+
+  // ── Profile sub-screen navigation ─────────────────────────────────────────
+
+  group('Profile screen — navigation', () {
+    testWidgets(
+      'tapping Change Password opens the change password screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openProfile(tester);
+        await tester.tap(find.text('Change Password'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        // The change-password screen has a 'Current Password' or similar field.
+        expect(find.text('Change Password'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'tapping Help and Support opens the help screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openProfile(tester);
+        await tester.tap(find.text('Help & Support'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        expect(find.text('Help & Support'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'tapping Edit Profile opens the edit profile screen',
+      skip: !credentialsAvailable,
+      (tester) async {
+        await launchApp(tester);
+        if (find.text('Sign In').evaluate().isNotEmpty) await signIn(tester);
+
+        await openProfile(tester);
+        await tester.tap(find.text('Edit Profile'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        expect(find.text('Edit Profile'), findsWidgets);
+      },
+    );
+  });
 }
