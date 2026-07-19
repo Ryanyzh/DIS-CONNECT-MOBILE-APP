@@ -30,7 +30,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -41,7 +41,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         title: Text(
           'Help & Support',
           style: AppTypography.bodyMd.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.ink,
             fontSize: 17,
           ),

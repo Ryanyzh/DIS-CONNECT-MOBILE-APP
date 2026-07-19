@@ -217,15 +217,16 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                     scrolledUnderElevation: 1,
                     shadowColor: Colors.black.withValues(alpha: 0.06),
                     automaticallyImplyLeading: false,
+                    pinned: true,
                     title: Text(
                       'Announcements',
                       style: AppTypography.bodyMd.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.ink,
-                        fontSize: 18,
+                        fontSize: 17,
                       ),
                     ),
-                    centerTitle: false,
+                    centerTitle: true,
                   ),
 
                   if (sorted.isEmpty)

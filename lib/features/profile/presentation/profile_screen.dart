@@ -53,7 +53,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF8FAFC),
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        shadowColor: Colors.black.withValues(alpha: 0.06),
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Profile',
+          style: AppTypography.bodyMd.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+            fontSize: 17,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -62,16 +78,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 12),
-                    Text(
-                      'Profile',
-                      style: AppTypography.displayXs.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
                     // ── Avatar + name card ──────────────────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -92,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 60,
                             height: 60,
                             decoration: const BoxDecoration(
-                              color: Color(0xFFE0E7FF),
+                              color: AppColors.primaryBgMid,
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
@@ -101,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF4338CA),
+                                color: AppColors.primaryDark,
                               ),
                             ),
                           ),

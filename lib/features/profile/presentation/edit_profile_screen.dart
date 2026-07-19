@@ -68,7 +68,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
         scrolledUnderElevation: 0.5,
         shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -79,7 +79,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text(
           'Edit Profile',
           style: AppTypography.bodyMd.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.ink,
             fontSize: 17,
           ),
@@ -101,7 +101,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     width: 88,
                     height: 88,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFE0E7FF),
+                      color: AppColors.primaryBgMid,
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
@@ -110,7 +110,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF4338CA),
+                        color: AppColors.primaryDark,
                       ),
                     ),
                   ),
@@ -122,7 +122,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       width: 28,
                       height: 28,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF4338CA),
+                        color: AppColors.primaryDark,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -138,7 +138,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               Text(
                 'Change photo',
                 style: AppTypography.caption.copyWith(
-                  color: const Color(0xFF4338CA),
+                  color: AppColors.primaryDark,
                   fontWeight: FontWeight.w600,
                 ),
               ),

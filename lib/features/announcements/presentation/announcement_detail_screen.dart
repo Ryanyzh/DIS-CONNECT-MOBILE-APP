@@ -65,7 +65,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     if (_entry == null) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFFF8FAFC),
           elevation: 0,
           leading: IconButton(
             icon: const GradientIcon(icon: Icons.arrow_back),
@@ -89,12 +89,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           // ── App bar ────────────────────────────────────────────────────
           SliverAppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFFF8FAFC),
             elevation: 0,
             scrolledUnderElevation: 0.5,
             shadowColor: Colors.black.withValues(alpha: 0.08),

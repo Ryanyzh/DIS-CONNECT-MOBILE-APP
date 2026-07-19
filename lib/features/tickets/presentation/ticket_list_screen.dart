@@ -83,7 +83,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       floatingActionButton: Container(
         decoration: BoxDecoration(
           gradient: AppGradients.brand,
@@ -132,7 +132,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
           slivers: [
             // ── App bar ──────────────────────────────────────────────────
             SliverAppBar(
-              backgroundColor: const Color(0xFFF5F7FA),
+              backgroundColor: const Color(0xFFF8FAFC),
               elevation: 0,
               scrolledUnderElevation: 1,
               shadowColor: Colors.black.withValues(alpha: 0.06),
@@ -141,9 +141,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
               title: Text(
                 'Tickets',
                 style: AppTypography.bodyMd.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.ink,
-                  fontSize: 18,
+                  fontSize: 17,
                 ),
               ),
               centerTitle: true,

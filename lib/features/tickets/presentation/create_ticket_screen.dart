@@ -395,7 +395,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       resizeToAvoidBottomInset: true,
       appBar: _buildAppBar(context),
       body: Column(
@@ -428,7 +428,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   AppBar _buildAppBar(BuildContext context) {
     const stepTitles = ['Ticket Info', 'Details', 'Review & Attach'];
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
       scrolledUnderElevation: 0.5,
       shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -447,7 +447,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           Text(
             'New Ticket',
             style: AppTypography.bodyMd.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: AppColors.ink,
               fontSize: 17,
             ),

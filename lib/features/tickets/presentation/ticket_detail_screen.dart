@@ -237,15 +237,15 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(backgroundColor: const Color(0xFFF8FAFC), elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     if (_detail == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(backgroundColor: const Color(0xFFF8FAFC), elevation: 0),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -260,7 +260,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     }
     final detail = _detail!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       resizeToAvoidBottomInset: true,
       appBar: _buildAppBar(context, detail.ticketCode, _liveUpdating),
       body: Column(
@@ -325,7 +325,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   AppBar _buildAppBar(BuildContext context, String ticketCode, bool liveUpdating) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
       scrolledUnderElevation: 0.5,
       shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -336,7 +336,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
       title: Text(
         ticketCode,
         style: AppTypography.bodyMd.copyWith(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: AppColors.ink,
           fontSize: 17,
         ),

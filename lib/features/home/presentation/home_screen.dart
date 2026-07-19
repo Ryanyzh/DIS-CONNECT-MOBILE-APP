@@ -94,24 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final ann = _latestAnnouncement;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // ── Sticky search app-bar ───────────────────────────────────────
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: const Color(0xFFF5F7FA),
-              elevation: 0,
-              scrolledUnderElevation: 1,
-              shadowColor: Colors.black.withValues(alpha: 0.06),
-              toolbarHeight: 0,
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(0),
-                child: Container(),
-              ),
-            ),
-
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
