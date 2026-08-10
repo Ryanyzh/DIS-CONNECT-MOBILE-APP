@@ -188,16 +188,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const _FieldDivider(),
 
-                  // Phone (optional)
+                  // Phone — read-only (no update endpoint available)
                   _FormField(
                     label: 'Phone',
                     child: TextFormField(
                       controller: _phoneController,
-                      keyboardType: TextInputType.phone,
+                      readOnly: true,
                       style: AppTypography.bodySm.copyWith(
-                        color: AppColors.ink,
+                        color: AppColors.mute,
                       ),
-                      decoration: _inputDecoration(hint: 'e.g. +65 9123 4567'),
+                      decoration: _inputDecoration(
+                        hint: 'Contact support to update',
+                        suffixIcon: const Icon(
+                          Icons.lock_outline,
+                          size: 16,
+                          color: AppColors.mute,
+                        ),
+                      ),
                     ),
                   ),
                 ],
