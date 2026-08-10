@@ -26,7 +26,7 @@ class QuickActionsSection extends StatelessWidget {
                 label: 'New Ticket',
                 iconBg: const Color(0xFFF0ECFF),
                 iconColor: const Color(0xFF9A32F8),
-                onTap: () => context.go('/tickets/create'),
+                onTap: () => context.push('/tickets/create'),
               ),
             ),
             const SizedBox(width: 10),
