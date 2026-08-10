@@ -19,6 +19,19 @@ class AnnouncementDetailScreen extends StatefulWidget {
 class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   AnnouncementEntry? _entry;
   bool _loading = false;
+  bool _fetchError = false;
+
+  Future<void> _fetchById() async {
+    setState(() { _loading = true; _fetchError = false; });
+    try {
+      final entry = await AnnouncementRepository(ApiClient())
+          .getAnnouncementById(widget.announcementId);
+      if (mounted) setState(() { _entry = entry; _loading = false; });
+    } catch (e) {
+      debugPrint('Failed to load announcement: $e');
+      if (mounted) setState(() { _loading = false; _fetchError = true; });
+    }
+  }
 
   // ── Reading time ──────────────────────────────────────────────────────────
   String _readingTime(String text) {
@@ -46,17 +59,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
       return;
     }
     // Slow path: deep link or home banner — fetch from API
-    if (_entry == null && !_loading) {
-      _loading = true;
-      AnnouncementRepository(ApiClient())
-          .getAnnouncementById(widget.announcementId)
-          .then((entry) {
-            if (mounted) setState(() { _entry = entry; _loading = false; });
-          })
-          .catchError((e) {
-            debugPrint('Failed to load announcement: $e');
-            if (mounted) setState(() => _loading = false);
-          });
+    if (_entry == null && !_loading && !_fetchError) {
+      _fetchById();
     }
   }
 
@@ -74,6 +78,35 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
+            : _fetchError
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Could not load announcement',
+                        style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Check your connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: _fetchById,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
             : const Center(child: Text('Announcement not found.')),
       );
     }
