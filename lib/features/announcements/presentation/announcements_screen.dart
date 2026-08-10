@@ -133,6 +133,11 @@ class AnnouncementsScreen extends StatefulWidget {
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   List<AnnouncementEntry> _announcements = [];
   bool _loading = true;
+  String _selectedCategory = 'All';
+
+  static const _categories = [
+    'All', 'General', 'Deadline', 'Event', 'Maintenance', 'Urgent', 'Result',
+  ];
 
   StreamSubscription<QuerySnapshot>? _firestoreSub;
   bool _firstSnapshot = true;
@@ -197,8 +202,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [..._announcements]
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final sorted = [..._announcements]..sort((a, b) => b.date.compareTo(a.date));
+    final filtered = _selectedCategory == 'All'
+        ? sorted
+        : sorted.where((e) => e.category == _selectedCategory).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -209,57 +216,110 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 onRefresh: _refresh,
                 color: const Color(0xFF4C39F2),
                 child: CustomScrollView(
-                slivers: [
-                  // ── App bar ───────────────────────────────────────────
-                  SliverAppBar(
-                    backgroundColor: const Color(0xFFF8FAFC),
-                    elevation: 0,
-                    scrolledUnderElevation: 1,
-                    shadowColor: Colors.black.withValues(alpha: 0.06),
-                    automaticallyImplyLeading: false,
-                    pinned: true,
-                    title: Text(
-                      'Announcements',
-                      style: AppTypography.bodyMd.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.ink,
-                        fontSize: 17,
-                      ),
-                    ),
-                    centerTitle: true,
-                  ),
-
-                  if (sorted.isEmpty)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: Text(
-                          'No announcements yet.',
-                          style: TextStyle(color: Color(0xFF94A3B8)),
+                  slivers: [
+                    // ── App bar ─────────────────────────────────────────
+                    SliverAppBar(
+                      backgroundColor: const Color(0xFFF8FAFC),
+                      elevation: 0,
+                      scrolledUnderElevation: 1,
+                      shadowColor: Colors.black.withValues(alpha: 0.06),
+                      automaticallyImplyLeading: false,
+                      pinned: true,
+                      title: Text(
+                        'Announcements',
+                        style: AppTypography.bodyMd.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.ink,
+                          fontSize: 17,
                         ),
                       ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _AnnouncementCard(
-                              entry: sorted[i],
-                              onTap: () => context.push(
-                                '/announcements/${sorted[i].id}',
-                                extra: sorted[i],
+                      centerTitle: true,
+                    ),
+
+                    // ── Category filter chips ────────────────────────────
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 48,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                          itemCount: _categories.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
+                          itemBuilder: (_, i) {
+                            final cat = _categories[i];
+                            final isSelected = cat == _selectedCategory;
+                            final style = cat == 'All'
+                                ? null
+                                : announcementCategoryStyle(cat);
+                            final selectedBg = style?.badgeBg ?? AppColors.primaryBgMid;
+                            final selectedText = style?.badgeText ?? AppColors.primaryDark;
+                            return GestureDetector(
+                              onTap: () => setState(() => _selectedCategory = cat),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? selectedBg
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(9999),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? selectedBg
+                                        : const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: Text(
+                                  cat,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? selectedText
+                                        : AppColors.body,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    if (filtered.isEmpty)
+                      const SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            'No announcements yet.',
+                            style: TextStyle(color: Color(0xFF94A3B8)),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _AnnouncementCard(
+                                entry: filtered[i],
+                                onTap: () => context.push(
+                                  '/announcements/${filtered[i].id}',
+                                  extra: filtered[i],
+                                ),
                               ),
                             ),
+                            childCount: filtered.length,
                           ),
-                          childCount: sorted.length,
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
       ),
     );
   }
