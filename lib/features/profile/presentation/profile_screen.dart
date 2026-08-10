@@ -17,6 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _authRepo = AuthRepository();
   UserProfile? _profile;
   bool _loading = true;
+  bool _profileError = false;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final profile = await UserRepository(ApiClient()).getUserById(uid);
       if (mounted) setState(() { _profile = profile; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() { _loading = false; _profileError = true; });
     }
   }
 
@@ -78,6 +79,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ── Error banner (non-blocking) ─────────────────────────
+                    if (_profileError) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF7ED),
+                          borderRadius: BorderRadius.circular(AppBorderRadius.wiseSm),
+                          border: Border.all(color: const Color(0xFFFED7AA)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline, size: 16, color: Color(0xFFEA580C)),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Some profile details could not be loaded.',
+                                style: TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _loadProfile,
+                              child: const Text(
+                                'Retry',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFEA580C),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     // ── Avatar + name card ──────────────────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
