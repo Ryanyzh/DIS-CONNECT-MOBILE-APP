@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
@@ -195,8 +197,10 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                     itemCount: _messages.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) =>
-                        _MessageCard(message: _messages[i]),
+                    itemBuilder: (_, i) => _MessageCard(
+                      message: _messages[i],
+                      ticketId: widget.ticketId,
+                    ),
                   ),
           ),
           _ReplyBar(
@@ -216,7 +220,28 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
 
 class _MessageCard extends StatelessWidget {
   final _Message message;
-  const _MessageCard({required this.message});
+  final String ticketId;
+  const _MessageCard({required this.message, required this.ticketId});
+
+  Future<void> _downloadAttachment(BuildContext context, String name) async {
+    try {
+      final url = await FirebaseStorage.instance
+          .ref('tickets/$ticketId/$name')
+          .getDownloadURL();
+      await Clipboard.setData(ClipboardData(text: url));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Download link copied to clipboard')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch download link')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -307,10 +332,13 @@ class _MessageCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.download_outlined,
-                      color: AppColors.body,
-                      size: 18,
+                    GestureDetector(
+                      onTap: () => _downloadAttachment(context, name),
+                      child: const Icon(
+                        Icons.download_outlined,
+                        color: AppColors.body,
+                        size: 18,
+                      ),
                     ),
                   ],
                 ),
