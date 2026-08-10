@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
@@ -312,7 +314,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                   if (detail.attachments.isNotEmpty) ...[
                     const _SectionLabel(label: 'ATTACHMENTS'),
                     const SizedBox(height: 8),
-                    _AttachmentsCard(files: detail.attachments),
+                    _AttachmentsCard(files: detail.attachments, ticketId: widget.ticketId),
                   ],
                 ],
               ),
@@ -437,8 +439,8 @@ class _SubjectCard extends StatelessWidget {
                 _MetaChip(
                   icon: Icons.flag_outlined,
                   label: detail.priority!,
-                  bg: detail.priorityColor!.withValues(alpha: 0.1),
-                  color: detail.priorityColor!,
+                  bg: (detail.priorityColor ?? AppColors.body).withValues(alpha: 0.1),
+                  color: detail.priorityColor ?? AppColors.body,
                 ),
               if (detail.source != null)
                 _MetaChip(
@@ -832,7 +834,8 @@ class _DatesCard extends StatelessWidget {
 // Attachment card for each file
 class _AttachmentsCard extends StatelessWidget {
   final List<AttachmentFile> files;
-  const _AttachmentsCard({required this.files});
+  final String ticketId;
+  const _AttachmentsCard({required this.files, required this.ticketId});
 
   @override
   Widget build(BuildContext context) {
@@ -847,7 +850,7 @@ class _AttachmentsCard extends StatelessWidget {
           final isLast = e.key == files.length - 1;
           return Column(
             children: [
-              _AttachmentRow(file: e.value),
+              _AttachmentRow(file: e.value, ticketId: ticketId),
               if (!isLast)
                 const Divider(
                   height: 1,
@@ -891,7 +894,28 @@ class _DescriptionCard extends StatelessWidget {
 // Attachments card showing list of attached files with download option
 class _AttachmentRow extends StatelessWidget {
   final AttachmentFile file;
-  const _AttachmentRow({required this.file});
+  final String ticketId;
+  const _AttachmentRow({required this.file, required this.ticketId});
+
+  Future<void> _download(BuildContext context) async {
+    try {
+      final url = await FirebaseStorage.instance
+          .ref('tickets/$ticketId/${file.name}')
+          .getDownloadURL();
+      await Clipboard.setData(ClipboardData(text: url));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Download link copied to clipboard')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch download link')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -920,7 +944,10 @@ class _AttachmentRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.download_outlined, color: AppColors.body, size: 20),
+          GestureDetector(
+            onTap: () => _download(context),
+            child: const Icon(Icons.download_outlined, color: AppColors.body, size: 20),
+          ),
         ],
       ),
     );
