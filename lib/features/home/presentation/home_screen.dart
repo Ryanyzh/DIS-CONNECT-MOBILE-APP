@@ -21,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Ticket> _tickets = [];
   bool _loadingTickets = true;
+  bool _ticketsError = false;
   AnnouncementEntry? _latestAnnouncement;
 
   // Derived from _tickets ────────────────────────────────────────────────────
@@ -67,12 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadTickets() async {
+    setState(() { _ticketsError = false; });
     try {
       final tickets = await TicketRepository(ApiClient()).getTickets();
       if (mounted) setState(() { _tickets = tickets; _loadingTickets = false; });
     } catch (e) {
       debugPrint('Failed to load home tickets: $e');
-      if (mounted) setState(() => _loadingTickets = false);
+      if (mounted) setState(() { _loadingTickets = false; _ticketsError = true; });
     }
   }
 
@@ -115,6 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     // ── My Overview ──────────────────────────────────────
                     if (_loadingTickets)
                       const _SectionSkeleton(height: 100)
+                    else if (_ticketsError)
+                      _ErrorRetryBlock(onRetry: _loadTickets)
                     else
                       OverviewStatsCard(
                         overview: _overview,
@@ -125,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // ── Recent Tickets ───────────────────────────────────
                     if (_loadingTickets)
                       const _SectionSkeleton(height: 160)
-                    else
+                    else if (!_ticketsError)
                       RecentTicketsSection(
                         tickets: _recentTickets,
                         onViewAll: () => context.go('/tickets'),
@@ -147,6 +151,39 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorRetryBlock extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _ErrorRetryBlock({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: Color(0xFF94A3B8), size: 20),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Could not load ticket data',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }
