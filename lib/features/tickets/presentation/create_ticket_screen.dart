@@ -152,6 +152,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   List<_Category> _categories = [];
   List<_Priority> _priorities = [];
   bool _loadingLookups = true;
+  bool _lookupsError = false;
 
   // ── Step 1 state ─────────────────────────────────────────────────────────
   final _subjectController = TextEditingController();
@@ -189,7 +190,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _loadingLookups = false);
+        setState(() { _loadingLookups = false; _lookupsError = true; });
       }
     }
   }
@@ -472,6 +473,43 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   Widget _buildStep1() {
     if (_loadingLookups) {
       return const Center(child: CircularProgressIndicator());
+    }
+    if (_lookupsError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFFCBD5E1)),
+              const SizedBox(height: 16),
+              const Text(
+                'Could not load ticket options',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Check your connection and try again.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 20),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() { _loadingLookups = true; _lookupsError = false; });
+                  _loadLookups();
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
