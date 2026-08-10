@@ -21,6 +21,7 @@ class TicketListScreen extends StatefulWidget {
 class _TicketListScreenState extends State<TicketListScreen> {
   List<Ticket> _tickets = [];
   bool _loading = true;
+  bool _error = false;
   String _query = '';
 
   // Route-change tracking for auto-refresh on return from sub-routes
@@ -70,13 +71,13 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   Future<void> _load() async {
     if (_loading && _tickets.isNotEmpty) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = false; });
     try {
       final tickets = await TicketRepository(ApiClient()).getTickets();
       if (mounted) setState(() { _tickets = tickets; _loading = false; });
     } catch (e) {
       debugPrint('Failed to load tickets: $e');
-      if (mounted) setState(() { _loading = false; });
+      if (mounted) setState(() { _loading = false; _error = true; });
     }
   }
 
@@ -163,6 +164,37 @@ class _TicketListScreenState extends State<TicketListScreen> {
             if (_loading)
               const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_error)
+              SliverFillRemaining(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Could not load tickets',
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Check your connection and pull down to retry.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: _load,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               )
             else if (_visible.isEmpty)
               const SliverFillRemaining(
