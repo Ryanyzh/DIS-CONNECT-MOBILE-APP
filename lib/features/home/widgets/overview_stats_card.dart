@@ -37,6 +37,17 @@ class OverviewStatsCard extends StatelessWidget {
                 color: AppColors.ink,
               ),
             ),
+            if (onViewAll != null)
+              GestureDetector(
+                onTap: onViewAll,
+                child: Text(
+                  'View all',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 14),
