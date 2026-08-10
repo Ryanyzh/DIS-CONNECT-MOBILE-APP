@@ -93,6 +93,7 @@ class TicketHistoryScreen extends StatefulWidget {
 class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
   List<_HistoryEntry> _history = [];
   bool _loading = true;
+  bool _error = false;
 
   @override
   void initState() {
@@ -111,7 +112,7 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
       }
     } catch (e) {
       debugPrint('Failed to load ticket history: $e');
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() { _loading = false; _error = true; });
     }
   }
 
@@ -140,6 +141,38 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : _error
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Failed to load history',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Check your connection and try again.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() { _loading = true; _error = false; });
+                        _load();
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : _history.isEmpty
           ? const Center(
               child: Text(
