@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// ── Brand gradient ─────────────────────────────────────────────────────────────
-// Linear 135°: #9A32F8 → #6A2FF3 → #4C39F2 → #1D4BEB → #1D67F5 → #247DF9
+// Design system for the app, including colors, typography, spacing, and reusable widgets.
 
 class AppGradients {
   AppGradients._();
@@ -37,119 +36,151 @@ class AppGradients {
 
 class AppColors {
   AppColors._();
+  // Brand gradient colors
+  static const Color brandViolet = Color(0xFF9A32F8);
+  static const Color brandPurple = Color(0xFF6A2FF3);
+  static const Color brandIndigo = Color(0xFF4C39F2);
+  static const Color brandRoyal = Color(0xFF1D4BEB);
+  static const Color brandBright = Color(0xFF1D67F5);
+  static const Color brandElectric = Color(0xFF247DF9);
 
-  // ── Brand ─────────────────────────────────────────────────────────────────
-  static const Color brandViolet    = Color(0xFF9A32F8); // gradient start
-  static const Color brandPurple    = Color(0xFF6A2FF3); // primary dark
-  static const Color brandIndigo    = Color(0xFF4C39F2); // primary
-  static const Color brandRoyal     = Color(0xFF1D4BEB); // royal blue
-  static const Color brandBright    = Color(0xFF1D67F5); // bright blue
-  static const Color brandElectric  = Color(0xFF247DF9); // gradient end
-
-  // Semantic aliases (used by AppDecorations / AppButtonStyles)
-  static const Color primary       = brandIndigo;
-  static const Color primaryDark   = brandPurple;
+  // Primary brand colors
+  static const Color primary = brandIndigo;
+  static const Color primaryDark = brandPurple;
   static const Color primaryDeeper = brandViolet;
 
-  // Light tints (backgrounds for chips, badges, selected states)
-  static const Color primaryBg     = Color(0xFFF0ECFF); // very light purple
-  static const Color primaryBgMid  = Color(0xFFE4DCFF); // light purple
-  static const Color primaryBorder = Color(0xFFCDC1FF); // purple border
+  // Background and border colors
+  static const Color primaryBg = Color(0xFFF0ECFF);
+  static const Color primaryBgMid = Color(0xFFE4DCFF);
+  static const Color primaryBorder = Color(0xFFCDC1FF);
 
-  // ── Legacy aliases (keep for backward compat in screens) ─────────────────
-  static const Color wiseGreen   = brandViolet;
-  static const Color wiseActive  = primaryBgMid;
-  static const Color wiseNeutral = Color(0xFFD9D0FF);
-  static const Color wisePale    = primaryBg;
+  // Other colors for the design system
 
-  static const Color canvas     = Color(0xFFFFFFFF);
+  static const Color canvas = Color(0xFFFFFFFF);
   static const Color canvasSoft = Color(0xFFF3F0FF); // replaces greenish tint
 
-  static const Color ink     = Color(0xFF0E0F0C);
-  static const Color inkDeep = Color(0xFF1D4BEB);  // replaces dark green
-  static const Color body    = Color(0xFF454745);
-  static const Color mute    = Color(0xFF868685);
+  static const Color ink = Color(0xFF0E0F0C);
+  static const Color inkDeep = Color(0xFF1D4BEB); // replaces dark green
+  static const Color body = Color(0xFF454745);
+  static const Color mute = Color(0xFF868685);
 
-  static const Color positive      = brandIndigo;
-  static const Color positiveDeep  = brandPurple; // replaces #054D28
+  static const Color positive = brandIndigo;
+  static const Color positiveDeep = brandPurple; // replaces #054D28
   static const Color positiveLight = primaryBg;
 
-  static const Color warning        = Color(0xFFFFD11A);
-  static const Color warningDeep    = Color(0xFFB86700);
+  static const Color warning = Color(0xFFFFD11A);
+  static const Color warningDeep = Color(0xFFB86700);
   static const Color warningContent = Color(0xFF4A3B1C);
 
-  static const Color negative       = Color(0xFFD03238);
-  static const Color negativeDeep   = Color(0xFFA72027);
+  static const Color negative = Color(0xFFD03238);
+  static const Color negativeDeep = Color(0xFFA72027);
   static const Color negativeDarkest = Color(0xFFA7000D);
-  static const Color negativeBg     = Color(0xFF320707);
+  static const Color negativeBg = Color(0xFF320707);
 
   static const Color orange = Color(0xFFFFC091);
-  static const Color cyan   = Color(0xFF38C8FF);
+  static const Color cyan = Color(0xFF38C8FF);
 }
 
+// Spacing constants for consistent padding and margins
 class AppSpacing {
   AppSpacing._();
 
-  static const double xxs  = 2;
-  static const double xs   = 4;
-  static const double sm   = 8;
-  static const double md   = 12;
-  static const double lg   = 16;
-  static const double xl   = 24;
-  static const double xxl  = 32;
+  static const double xxs = 2;
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 24;
+  static const double xxl = 32;
   static const double xxxl = 48;
 }
 
+// Border radius constants for consistent rounded corners
 class AppBorderRadius {
   AppBorderRadius._();
 
-  static const double wiseSm   = 8;
-  static const double wiseMd   = 12;
-  static const double wiseLg   = 16;
-  static const double wiseXl   = 24;
+  static const double wiseSm = 8;
+  static const double wiseMd = 12;
+  static const double wiseLg = 16;
+  static const double wiseXl = 24;
   static const double wisePill = 9999;
 }
 
+// Typography constants for consistent text styles
 class AppTypography {
   AppTypography._();
 
   static const String fontFamily = 'Poppins';
 
   static const TextStyle displayMega = TextStyle(
-    fontSize: 126, height: 0.85, fontWeight: FontWeight.w900, color: AppColors.ink,
+    fontSize: 126,
+    height: 0.85,
+    fontWeight: FontWeight.w900,
+    color: AppColors.ink,
   );
   static const TextStyle displayXxl = TextStyle(
-    fontSize: 96, height: 0.85, fontWeight: FontWeight.w900, color: AppColors.ink,
+    fontSize: 96,
+    height: 0.85,
+    fontWeight: FontWeight.w900,
+    color: AppColors.ink,
   );
   static const TextStyle displayXl = TextStyle(
-    fontSize: 64, height: 0.85, fontWeight: FontWeight.w900, color: AppColors.ink,
+    fontSize: 64,
+    height: 0.85,
+    fontWeight: FontWeight.w900,
+    color: AppColors.ink,
   );
   static const TextStyle displayLg = TextStyle(
-    fontSize: 47, height: 1.5, fontWeight: FontWeight.w400, color: AppColors.ink,
+    fontSize: 47,
+    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AppColors.ink,
   );
   static const TextStyle displayMd = TextStyle(
-    fontSize: 40, height: 0.85, fontWeight: FontWeight.w900, color: AppColors.ink,
+    fontSize: 40,
+    height: 0.85,
+    fontWeight: FontWeight.w900,
+    color: AppColors.ink,
   );
   static const TextStyle displaySm = TextStyle(
-    fontSize: 32, height: 1.2, fontWeight: FontWeight.w600, color: AppColors.ink,
+    fontSize: 32,
+    height: 1.2,
+    fontWeight: FontWeight.w600,
+    color: AppColors.ink,
   );
   static const TextStyle displayXs = TextStyle(
-    fontSize: 24, height: 1.3, fontWeight: FontWeight.w600, color: AppColors.ink,
+    fontSize: 24,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+    color: AppColors.ink,
   );
   static const TextStyle bodyLg = TextStyle(
-    fontSize: 20, height: 1.5, fontWeight: FontWeight.w400, color: AppColors.body,
+    fontSize: 20,
+    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AppColors.body,
   );
   static const TextStyle bodyMd = TextStyle(
-    fontSize: 16, height: 1.5, fontWeight: FontWeight.w400, color: AppColors.body,
+    fontSize: 16,
+    height: 1.5,
+    fontWeight: FontWeight.w400,
+    color: AppColors.body,
   );
   static const TextStyle bodySm = TextStyle(
-    fontSize: 14, height: 1.45, fontWeight: FontWeight.w400, color: AppColors.body,
+    fontSize: 14,
+    height: 1.45,
+    fontWeight: FontWeight.w400,
+    color: AppColors.body,
   );
   static const TextStyle caption = TextStyle(
-    fontSize: 12, height: 1.33, fontWeight: FontWeight.w400, color: AppColors.mute,
+    fontSize: 12,
+    height: 1.33,
+    fontWeight: FontWeight.w400,
+    color: AppColors.mute,
   );
 }
 
+// Reusable decorations and button styles for consistent UI components
 class AppDecorations {
   AppDecorations._();
 
@@ -185,6 +216,7 @@ class AppDecorations {
   }
 }
 
+// Button styles for consistent button appearances throughout the app.
 class AppButtonStyles {
   AppButtonStyles._();
 
@@ -200,43 +232,16 @@ class AppButtonStyles {
   );
 }
 
-// ── Gradient widgets ──────────────────────────────────────────────────────────
-
-/// Primary call-to-action button with the brand gradient background.
-///
-/// Two usage patterns:
-///
-/// **Simple label + icon** (recommended — handles loading state automatically):
-/// ```dart
-/// GradientButton(
-///   onPressed: _submit,
-///   loading: _isLoading,
-///   icon: Icons.send_rounded,
-///   label: 'Submit',
-///   loadingLabel: 'Submitting...', // optional — defaults to label
-/// )
-/// ```
-///
-/// **Fully custom child** (for complex layouts):
-/// ```dart
-/// GradientButton(onPressed: _submit, child: MyWidget())
-/// ```
-///
-/// Pass [loading] = true to keep the gradient visible while blocking taps.
-/// The button shows a spinner next to [loadingLabel] (or [label]) when loading.
-/// Pass [onPressed] = null (with loading = false) for a fully-disabled grey state.
+// Reusable gradient button widget for consistent call-to-action buttons
 class GradientButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
-  // ── Simple API ─────────────────────────────────────────────────────────────
   final IconData? icon;
   final String? label;
   final String? loadingLabel; // shown while loading; defaults to [label]
 
-  // ── Custom content (used when icon/label aren't sufficient) ───────────────
   final Widget? child;
 
-  // ── Shared ─────────────────────────────────────────────────────────────────
   final bool loading;
   final double height;
   final BorderRadius? borderRadius;
@@ -251,8 +256,10 @@ class GradientButton extends StatelessWidget {
     this.loading = false,
     this.height = 54,
     this.borderRadius,
-  }) : assert(label != null || child != null,
-            'GradientButton: provide either label or child');
+  }) : assert(
+         label != null || child != null,
+         'GradientButton: provide either label or child',
+       );
 
   Widget _buildContent() {
     final textStyle = AppTypography.bodyMd.copyWith(
@@ -336,8 +343,7 @@ class GradientButton extends StatelessWidget {
   }
 }
 
-/// Applies the brand gradient as a shader mask over an icon.
-/// Use this for AppBar back buttons and other icon-only brand touches.
+// Reusable gradient icon widget for consistent icon appearances
 class GradientIcon extends StatelessWidget {
   final IconData icon;
   final double size;
