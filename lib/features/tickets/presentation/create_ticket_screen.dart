@@ -9,7 +9,7 @@ import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
-// ── Category / Priority models ────────────────────────────────────────────────
+// category / priority models
 
 class _Category {
   final String label;
@@ -18,10 +18,10 @@ class _Category {
   const _Category(this.label, this.icon, this.id);
 
   factory _Category.fromJson(Map<String, dynamic> json) => _Category(
-        json['category_name'] as String? ?? '',
-        _iconForCategory(json['category_name'] as String? ?? ''),
-        json['category_id'] as String? ?? '',
-      );
+    json['category_name'] as String? ?? '',
+    _iconForCategory(json['category_name'] as String? ?? ''),
+    json['category_id'] as String? ?? '',
+  );
 }
 
 class _Priority {
@@ -32,11 +32,11 @@ class _Priority {
   const _Priority(this.label, this.icon, this.color, this.id);
 
   factory _Priority.fromJson(Map<String, dynamic> json) => _Priority(
-        json['priority_name'] as String? ?? '',
-        _iconForPriority(json['priority_name'] as String? ?? ''),
-        _parseHexColor(json['color_code'] as String? ?? '#94A3B8'),
-        json['priority_id'] as String? ?? '',
-      );
+    json['priority_name'] as String? ?? '',
+    _iconForPriority(json['priority_name'] as String? ?? ''),
+    _parseHexColor(json['color_code'] as String? ?? '#94A3B8'),
+    json['priority_id'] as String? ?? '',
+  );
 }
 
 IconData _iconForCategory(String name) {
@@ -131,9 +131,7 @@ Color _fileIconColor(String mimeType) {
   return const Color(0xFF4C39F2);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class CreateTicketScreen extends StatefulWidget {
   const CreateTicketScreen({super.key});
@@ -148,24 +146,24 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   late final PageController _pageController;
   int _currentStep = 0; // 0-indexed
 
-  // ── Lookup state ─────────────────────────────────────────────────────────
+  // lookup state
   List<_Category> _categories = [];
   List<_Priority> _priorities = [];
   bool _loadingLookups = true;
   bool _lookupsError = false;
 
-  // ── Step 1 state ─────────────────────────────────────────────────────────
+  // step 1 state
   final _subjectController = TextEditingController();
   static const int _maxSubjectChars = 200;
   _Category? _selectedCategory;
   _Priority? _selectedPriority;
 
-  // ── Step 2 state ─────────────────────────────────────────────────────────
+  // step 2 state
   final _descController = TextEditingController();
   static const int _maxDescChars = 1000;
   DateTime? _dueDate;
 
-  // ── Step 3 state ─────────────────────────────────────────────────────────
+  // step 3 state
   final List<_AttachedFile> _attachments = [];
 
   bool _isSubmitting = false;
@@ -177,10 +175,14 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     _loadLookups();
   }
 
+  // Loads the ticket categories and priorities from the API, updating the state accordingly
   Future<void> _loadLookups() async {
     try {
       final repo = TicketRepository(ApiClient());
-      final results = await Future.wait([repo.getCategories(), repo.getPriorities()]);
+      final results = await Future.wait([
+        repo.getCategories(),
+        repo.getPriorities(),
+      ]);
       if (mounted) {
         setState(() {
           _categories = results[0].map(_Category.fromJson).toList();
@@ -190,7 +192,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() { _loadingLookups = false; _lookupsError = true; });
+        setState(() {
+          _loadingLookups = false;
+          _lookupsError = true;
+        });
       }
     }
   }
@@ -203,7 +208,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     super.dispose();
   }
 
-  // ── Validation ────────────────────────────────────────────────────────────
+  // Validation for each step
 
   bool _validateCurrentStep() {
     switch (_currentStep) {
@@ -224,7 +229,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         }
         return true;
       default:
-        return true; // attachments optional
+        return true;
     }
   }
 
@@ -232,8 +237,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ── Navigation ────────────────────────────────────────────────────────────
-
+  // navigation
   void _goNext() {
     if (!_validateCurrentStep()) return;
     if (_currentStep < _totalSteps - 1) {
@@ -264,7 +268,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     try {
       final repo = TicketRepository(ApiClient());
 
-      // Step 1 — create ticket, get ticket_id back
       final response = await repo.createTicket(
         subject: _subjectController.text.trim(),
         categoryId: _selectedCategory!.id,
@@ -274,27 +277,33 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         priorityId: _selectedPriority?.id,
         dueAt: _dueDate,
       );
-      // Steps 2 & 3 — only needed when the user attached files
-      if (_attachments.isNotEmpty) {
-        final ticketId = response['ticket']['ticket_id'] as String;
+      final ticketId =
+          (response['ticket'] as Map<String, dynamic>?)?['ticket_id']
+              as String?;
 
+      if (_attachments.isNotEmpty && ticketId != null) {
         for (final file in _attachments) {
           final storagePath = 'tickets/$ticketId/${file.name}';
+          try {
+            await FirebaseStorage.instance
+                .ref(storagePath)
+                .putData(
+                  file.bytes,
+                  SettableMetadata(contentType: file.mimeType),
+                );
 
-          await FirebaseStorage.instance
-              .ref(storagePath)
-              .putData(
-                file.bytes,
-                SettableMetadata(contentType: file.mimeType),
-              );
-
-          await repo.createAttachment(
-            ticketId: ticketId,
-            fileName: file.name,
-            filePath: storagePath,
-            fileType: file.mimeType,
-            fileSize: file.sizeBytes,
-          );
+            await repo.createAttachment(
+              ticketId: ticketId,
+              fileName: file.name,
+              filePath: storagePath,
+              fileType: file.mimeType,
+              fileSize: file.sizeBytes,
+            );
+          } catch (e) {
+            // Log and continue — a failed attachment shouldn't block navigation.
+            // The ticket itself was created successfully.
+            debugPrint('Failed to upload attachment ${file.name}: $e');
+          }
         }
       }
 
@@ -307,7 +316,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     }
   }
 
-  // ── Category sheet ────────────────────────────────────────────────────────
+  // category sheet
 
   void _showCategorySheet() {
     showModalBottomSheet(
@@ -328,7 +337,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     );
   }
 
-  // ── Date picker ───────────────────────────────────────────────────────────
+  // date picker
 
   Future<void> _pickDueDate() async {
     final now = DateTime.now();
@@ -352,7 +361,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     if (picked != null) setState(() => _dueDate = picked);
   }
 
-  // ── Attachment ────────────────────────────────────────────────────────────
+  // attachment
 
   Future<void> _addAttachment() async {
     final result = await FilePicker.pickFiles(
@@ -378,6 +387,11 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       return;
     }
 
+    if (_attachments.any((a) => a.name == file.name)) {
+      _snack('This file has already been attached');
+      return;
+    }
+
     setState(() {
       _attachments.add(
         _AttachedFile(
@@ -389,9 +403,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Build
-  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -401,10 +413,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       appBar: _buildAppBar(context),
       body: Column(
         children: [
-          // ── Step indicator ──────────────────────────────────────────────
+          // step indicator
           _StepIndicator(current: _currentStep, total: _totalSteps),
 
-          // ── Page content ────────────────────────────────────────────────
+          // page content
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -413,7 +425,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             ),
           ),
 
-          // ── Bottom navigation ───────────────────────────────────────────
+          // bottom navigation
           _BottomNav(
             currentStep: _currentStep,
             totalSteps: _totalSteps,
@@ -427,7 +439,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   }
 
   AppBar _buildAppBar(BuildContext context) {
-    const stepTitles = ['Ticket Info', 'Details', 'Review & Attach'];
+    const stepTitles = ['Ticket Info', 'Details', 'Review'];
     return AppBar(
       backgroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
@@ -435,13 +447,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       shadowColor: Colors.black.withValues(alpha: 0.08),
       leading: IconButton(
         icon: const GradientIcon(icon: Icons.arrow_back),
-        onPressed: () {
-          if (_currentStep > 0) {
-            _goBack();
-          } else {
-            Navigator.of(context).maybePop();
-          }
-        },
+        onPressed: _goBack,
       ),
       title: Column(
         children: [
@@ -466,9 +472,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Step pages
-  // ─────────────────────────────────────────────────────────────────────────
 
   Widget _buildStep1() {
     if (_loadingLookups) {
@@ -481,7 +485,11 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFFCBD5E1)),
+              const Icon(
+                Icons.wifi_off_rounded,
+                size: 48,
+                color: Color(0xFFCBD5E1),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Could not load ticket options',
@@ -500,7 +508,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               const SizedBox(height: 20),
               TextButton.icon(
                 onPressed: () {
-                  setState(() { _loadingLookups = true; _lookupsError = false; });
+                  setState(() {
+                    _loadingLookups = true;
+                    _lookupsError = false;
+                  });
                   _loadLookups();
                 },
                 icon: const Icon(Icons.refresh_rounded),
@@ -516,7 +527,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Section hint ────────────────────────────────────────────────
+          // section hint
           _StepHint(
             icon: Icons.info_outline_rounded,
             text:
@@ -524,7 +535,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 24),
 
-          // ── Subject ─────────────────────────────────────────────────────
+          // subject
           const _FieldLabel(label: 'Subject', required: true),
           const SizedBox(height: 8),
           _SubjectField(
@@ -534,7 +545,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 24),
 
-          // ── Category ────────────────────────────────────────────────────
+          // category
           const _FieldLabel(label: 'Category', required: true),
           const SizedBox(height: 8),
           _CategoryDropdown(
@@ -543,7 +554,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 24),
 
-          // ── Priority ────────────────────────────────────────────────────
+          // priority
           const _FieldLabel(label: 'Priority'),
           const SizedBox(height: 4),
           Text(
@@ -558,7 +569,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 14),
 
-          // ── Requested Due Date ───────────────────────────────────────────
+          // requested due date
           const _FieldLabel(label: 'Requested Due Date'),
           const SizedBox(height: 4),
           Text(
@@ -582,7 +593,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Section hint ────────────────────────────────────────────────
+          // section hint
           _StepHint(
             icon: Icons.edit_note_rounded,
             text:
@@ -590,7 +601,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 24),
 
-          // ── Description ──────────────────────────────────────────────────
+          // description
           const _FieldLabel(label: 'Description', required: true),
           const SizedBox(height: 8),
           _DescriptionField(
@@ -600,7 +611,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── Attachments ──────────────────────────────────────────────────
+          // attachments
           const _FieldLabel(label: 'Attachments'),
           const SizedBox(height: 4),
           Text(
@@ -625,7 +636,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Review divider ───────────────────────────────────────────────
+          // review divider
           Row(
             children: [
               const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
@@ -646,7 +657,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Review card ──────────────────────────────────────────────────
+          // review card
           _ReviewCard(
             subject: _subjectController.text,
             category: _selectedCategory,
@@ -657,7 +668,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ── Auto-set fields note ─────────────────────────────────────────
+          // auto-set fields note
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -691,9 +702,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Step indicator
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _StepIndicator extends StatelessWidget {
   final int current; // 0-indexed
@@ -797,9 +806,7 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Bottom navigation
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _BottomNav extends StatelessWidget {
   final int currentStep;
@@ -876,9 +883,7 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Shared field widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _StepHint extends StatelessWidget {
   final IconData icon;
@@ -943,9 +948,7 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Step 1 widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SubjectField extends StatelessWidget {
   final TextEditingController controller;
@@ -1100,7 +1103,7 @@ class _CategorySheet extends StatelessWidget {
                   color: AppColors.ink,
                 ),
               ),
-              trailing: selected?.label == c.label
+              trailing: selected?.id == c.id
                   ? const Icon(Icons.check, color: Color(0xFF4C39F2), size: 18)
                   : null,
               onTap: () => onSelect(c),
@@ -1129,7 +1132,7 @@ class _PrioritySelector extends StatelessWidget {
     }
     return Row(
       children: priorities.map((p) {
-        final isSelected = selected?.label == p.label;
+        final isSelected = selected?.id == p.id;
         return Expanded(
           child: Padding(
             padding: EdgeInsets.only(right: p == priorities.last ? 0 : 8),
@@ -1171,9 +1174,7 @@ class _PrioritySelector extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Step 2 widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _DescriptionField extends StatelessWidget {
   final TextEditingController controller;
@@ -1315,9 +1316,7 @@ class _DueDatePicker extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Step 3 widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _AttachmentsBox extends StatelessWidget {
   final List<_AttachedFile> files;
@@ -1452,7 +1451,7 @@ class _AttachmentsBox extends StatelessWidget {
   }
 }
 
-// ── Review card ───────────────────────────────────────────────────────────────
+// review card
 
 class _ReviewCard extends StatelessWidget {
   final String subject;

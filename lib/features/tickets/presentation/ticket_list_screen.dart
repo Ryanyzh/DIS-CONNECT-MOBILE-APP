@@ -7,9 +7,8 @@ import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/models/ticket_model.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/search_bar.dart';
-// ─────────────────────────────────────────────────────────────────────────────
+
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TicketListScreen extends StatefulWidget {
   const TicketListScreen({super.key});
@@ -24,27 +23,31 @@ class _TicketListScreenState extends State<TicketListScreen> {
   bool _error = false;
   String _query = '';
 
-  // Route-change tracking for auto-refresh on return from sub-routes
   bool _firstDepChange = true;
   bool? _wasCurrent;
 
+  // Returns true if the ticket is resolved or closed
   static bool _isDone(Ticket t) {
     final s = t.status.toLowerCase();
     return s == 'resolved' || s == 'closed';
   }
 
+  // Returns the list of tickets that match the current search query, or all tickets if the query is empty
   List<Ticket> get _visible {
     if (_query.isEmpty) return _tickets;
     final q = _query.toLowerCase();
-    return _tickets.where((t) =>
-      t.title.toLowerCase().contains(q) ||
-      t.displayId.toLowerCase().contains(q) ||
-      t.category.toLowerCase().contains(q) ||
-      t.status.toLowerCase().contains(q),
-    ).toList();
+    return _tickets
+        .where(
+          (t) =>
+              t.title.toLowerCase().contains(q) ||
+              t.displayId.toLowerCase().contains(q) ||
+              t.category.toLowerCase().contains(q) ||
+              t.status.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
-  List<Ticket> get _active   => _visible.where((t) => !_isDone(t)).toList();
+  List<Ticket> get _active => _visible.where((t) => !_isDone(t)).toList();
   List<Ticket> get _resolved => _visible.where(_isDone).toList();
 
   @override
@@ -62,7 +65,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
       return;
     }
     final isCurrent = ModalRoute.of(context)?.isCurrent == true;
-    // Reload only when transitioning from hidden → current (returned from sub-route)
     if (isCurrent && _wasCurrent == false && !_loading) {
       _load();
     }
@@ -71,13 +73,24 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
   Future<void> _load() async {
     if (_loading && _tickets.isNotEmpty) return;
-    setState(() { _loading = true; _error = false; });
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
     try {
       final tickets = await TicketRepository(ApiClient()).getTickets();
-      if (mounted) setState(() { _tickets = tickets; _loading = false; });
+      if (mounted)
+        setState(() {
+          _tickets = tickets;
+          _loading = false;
+        });
     } catch (e) {
       debugPrint('Failed to load tickets: $e');
-      if (mounted) setState(() { _loading = false; _error = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
     }
   }
 
@@ -130,169 +143,187 @@ class _TicketListScreenState extends State<TicketListScreen> {
           onRefresh: _load,
           color: const Color(0xFF6A2FF3),
           child: CustomScrollView(
-          slivers: [
-            // ── App bar ──────────────────────────────────────────────────
-            SliverAppBar(
-              backgroundColor: const Color(0xFFF8FAFC),
-              elevation: 0,
-              scrolledUnderElevation: 1,
-              shadowColor: Colors.black.withValues(alpha: 0.06),
-              automaticallyImplyLeading: false,
-              pinned: true,
-              title: Text(
-                'Tickets',
-                style: AppTypography.bodyMd.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                  fontSize: 17,
-                ),
-              ),
-              centerTitle: true,
-            ),
-
-            // ── Search bar ──────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: AppSearchBar(
-                  onChanged: (q) => setState(() => _query = q),
-                ),
-              ),
-            ),
-
-            // ── Cards ───────────────────────────────────────────────────
-            if (_loading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error)
-              SliverFillRemaining(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Could not load tickets',
-                          style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Check your connection and pull down to retry.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton.icon(
-                          onPressed: _load,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+            slivers: [
+              // app bar
+              SliverAppBar(
+                backgroundColor: const Color(0xFFF8FAFC),
+                elevation: 0,
+                scrolledUnderElevation: 1,
+                shadowColor: Colors.black.withValues(alpha: 0.06),
+                automaticallyImplyLeading: false,
+                pinned: true,
+                title: Text(
+                  'Tickets',
+                  style: AppTypography.bodyMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                    fontSize: 17,
                   ),
                 ),
-              )
-            else if (_visible.isEmpty)
-              const SliverFillRemaining(
-                child: Center(child: Text('No tickets found')),
-              )
-            else ...[
-              // Active tickets
-              if (_active.isNotEmpty)
-                SliverPadding(
+                centerTitle: true,
+              ),
+
+              // search bar
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: _TicketCard(
-                          ticket: _active[i],
-                          onTap: () => context.go('/tickets/${_active[i].id}'),
-                        ),
-                      ),
-                      childCount: _active.length,
-                    ),
+                  child: AppSearchBar(
+                    onChanged: (q) => setState(() => _query = q),
                   ),
                 ),
+              ),
 
-              // Resolved / Closed section
-              if (_resolved.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-                    child: Row(
-                      children: [
-                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle_outline,
-                                size: 13,
-                                color: Color(0xFF94A3B8),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'RESOLVED & CLOSED (${_resolved.length})',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF94A3B8),
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                            ],
+              // cards
+              if (_loading)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.wifi_off_rounded,
+                            size: 40,
+                            color: Color(0xFFCBD5E1),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Could not load tickets',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Check your connection and pull down to retry.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton.icon(
+                            onPressed: _load,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else if (_visible.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(child: Text('No tickets found')),
+                )
+              else ...[
+                // Active tickets
+                if (_active.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, i) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _TicketCard(
+                            ticket: _active[i],
+                            onTap: () =>
+                                context.go('/tickets/${_active[i].id}'),
                           ),
                         ),
-                        const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: _TicketCard(
-                          ticket: _resolved[i],
-                          onTap: () => context.go('/tickets/${_resolved[i].id}'),
-                          muted: true,
-                        ),
+                        childCount: _active.length,
                       ),
-                      childCount: _resolved.length,
                     ),
                   ),
-                ),
-              ],
 
-              // Bottom padding so FAB doesn't overlap last card
-              const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                // Resolved / Closed section
+                if (_resolved.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE2E8F0)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_outline,
+                                  size: 13,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'RESOLVED & CLOSED (${_resolved.length})',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF94A3B8),
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE2E8F0)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, i) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _TicketCard(
+                            ticket: _resolved[i],
+                            onTap: () =>
+                                context.go('/tickets/${_resolved[i].id}'),
+                            muted: true,
+                          ),
+                        ),
+                        childCount: _resolved.length,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Bottom padding so FAB doesn't overlap last card
+                const SliverToBoxAdapter(child: SizedBox(height: 96)),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Ticket card
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _TicketCard extends StatelessWidget {
   final Ticket ticket;
   final VoidCallback onTap;
   final bool muted;
 
-  const _TicketCard({required this.ticket, required this.onTap, this.muted = false});
+  const _TicketCard({
+    required this.ticket,
+    required this.onTap,
+    this.muted = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -304,21 +335,21 @@ class _TicketCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: muted ? const Color(0xFFF8FAFC) : Colors.white,
           borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
-          boxShadow: muted ? null : [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: muted
-              ? Border.all(color: const Color(0xFFE2E8F0))
-              : null,
+          boxShadow: muted
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+          border: muted ? Border.all(color: const Color(0xFFE2E8F0)) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── ID + badge ────────────────────────────────────────────
+            // id + badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -335,7 +366,7 @@ class _TicketCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // ── Subject ───────────────────────────────────────────────
+            // subject
             Text(
               ticket.title,
               style: AppTypography.bodySm.copyWith(color: AppColors.body),
@@ -344,7 +375,7 @@ class _TicketCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // ── Date ─────────────────────────────────────────────────
+            // date
             if (date != null)
               Row(
                 children: [

@@ -12,13 +12,11 @@ class GreetingHeader extends StatelessWidget {
     return 'Good evening,';
   }
 
-  /// Returns the display name (first name only) or a fallback.
   String _firstName(User? user) {
     final full = user?.displayName ?? user?.email ?? 'there';
     return full.split(' ').first;
   }
 
-  /// Generates up to two initials from the display name.
   String _initials(User? user) {
     final full = user?.displayName ?? user?.email ?? '';
     final parts = full.trim().split(RegExp(r'\s+'));

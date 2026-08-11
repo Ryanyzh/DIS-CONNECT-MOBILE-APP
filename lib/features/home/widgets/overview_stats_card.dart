@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 
-/// Counts of the current user's tickets by status.
 class TicketOverview {
   final int inReview;
   final int waiting;

@@ -4,9 +4,7 @@ import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Model
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _HistoryEntry {
   final String actionId;
@@ -29,6 +27,7 @@ class _HistoryEntry {
       action: json['action_type'] as String? ?? 'Update',
       detail: json['message'] as String? ?? '',
       actorName: json['officer_name'] as String? ?? 'System',
+      // toLocal() converts the UTC timestamp from the server to the device timezone.
       timestamp:
           (DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal()) ??
           DateTime.now(),
@@ -36,7 +35,7 @@ class _HistoryEntry {
   }
 }
 
-// Maps an action_type string to icon + colors
+// Styles the timeline entry based on the action type
 ({IconData icon, Color iconColor, Color iconBg}) _styleFor(String action) {
   switch (action) {
     case 'assignment':
@@ -78,9 +77,7 @@ class _HistoryEntry {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TicketHistoryScreen extends StatefulWidget {
   final String ticketId;
@@ -103,7 +100,9 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
 
   Future<void> _load() async {
     try {
-      final raw = await TicketRepository(ApiClient()).getHistory(widget.ticketId);
+      final raw = await TicketRepository(
+        ApiClient(),
+      ).getHistory(widget.ticketId);
       if (mounted) {
         setState(() {
           _history = raw.map(_HistoryEntry.fromJson).toList();
@@ -112,7 +111,11 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
       }
     } catch (e) {
       debugPrint('Failed to load ticket history: $e');
-      if (mounted) setState(() { _loading = false; _error = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
     }
   }
 
@@ -148,11 +151,18 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
+                    const Icon(
+                      Icons.wifi_off_rounded,
+                      size: 40,
+                      color: Color(0xFFCBD5E1),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       'Failed to load history',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
@@ -163,7 +173,10 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: () {
-                        setState(() { _loading = true; _error = false; });
+                        setState(() {
+                          _loading = true;
+                          _error = false;
+                        });
                         _load();
                       },
                       icon: const Icon(Icons.refresh_rounded),
@@ -192,9 +205,7 @@ class _TicketHistoryScreenState extends State<TicketHistoryScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _HistoryTile extends StatelessWidget {
   final _HistoryEntry entry;
@@ -209,7 +220,7 @@ class _HistoryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Timeline spine ───────────────────────────────────────────
+          // timeline spine
           SizedBox(
             width: 44,
             child: Column(
@@ -239,7 +250,7 @@ class _HistoryTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // ── Content ──────────────────────────────────────────────────
+          // content
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
@@ -285,7 +296,9 @@ class _HistoryTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        DateFormat('d MMM yyyy, h:mm a').format(entry.timestamp),
+                        DateFormat(
+                          'd MMM yyyy, h:mm a',
+                        ).format(entry.timestamp),
                         style: AppTypography.caption,
                       ),
                     ],
