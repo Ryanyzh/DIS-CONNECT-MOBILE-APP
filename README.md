@@ -69,19 +69,21 @@ The app authenticates via **Firebase Authentication** and communicates with a **
 
 ### Ticket creation — 3-step form
 
-| Step                | Fields                                                                            |
-| ------------------- | --------------------------------------------------------------------------------- |
-| 1 · Ticket Info     | Subject, Category (API-fetched), Priority (API-fetched, optional)                 |
-| 2 · Details         | Description, Requested Due Date (date-only, stored in local timezone)             |
-| 3 · Review & Attach | File attachments (PDF / images / Office docs, up to 10 MB each) with live preview |
+| Step            | Fields                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1 · Ticket Info | Subject, Category (API-fetched), Priority (API-fetched, optional)                                                   |
+| 2 · Details     | Description, Requested Due Date (date-only, stored in local timezone), Attachments (PDF / images / Office docs, up to 5 files, 10 MB each) |
+| 3 · Review      | Summary card showing all entered fields (including attachment count); tapping Submit triggers ticket creation        |
 
-Attachment upload flow:
+Attachment upload flow (triggered on step 3 Submit):
 
 ```
 CreateTicketScreen._submit()
-  ├─ POST /api/v1/tickets           →  receive ticket_id
-  ├─ FirebaseStorage.putData()      →  upload to tickets/{ticket_id}/{filename}
-  └─ POST /api/v1/tickets/:id/attachments  →  record metadata on backend
+  ├─ POST /api/v1/tickets                        →  receive ticket_id
+  └─ for each attachment collected in step 2:
+       ├─ FirebaseStorage.putData()              →  upload to tickets/{ticket_id}/{filename}
+       └─ POST /api/v1/tickets/:id/attachments   →  record metadata on backend
+          (errors per file are logged and skipped — ticket creation is never rolled back)
 ```
 
 ### Ticket list — Active / Resolved split

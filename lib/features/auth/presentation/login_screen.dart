@@ -142,16 +142,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 18),
 
                     // app name
-                    const Text(
-                      'dis-connect',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0E0F0C),
-                        letterSpacing: -0.5,
-                      ),
+                    SvgPicture.asset(
+                      'assets/images/dis-connect_wording.svg',
+                      height: 32,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 16),
                     Text(
                       'Scholarship Management Portal',
                       style: AppTypography.bodySm.copyWith(
@@ -159,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 46),
 
                     // form card
                     Container(
