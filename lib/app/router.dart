@@ -20,21 +20,23 @@ import '../shared/widgets/main_shell.dart';
 final appRouter = GoRouter(
   initialLocation: '/home',
 
-  // ── Auth redirect ──────────────────────────────────────────────────────────
+  // Auth guard — redirects to /login if not signed in, and back to /home if already signed in.
   redirect: (context, state) {
     final signedIn = FirebaseAuth.instance.currentUser != null;
     final onLoginPage = state.matchedLocation == '/login';
 
+    // If the user is not signed in and is not on the login page, redirect to /login.
+    // If the user is signed in and is on the login page, redirect to /home
     if (!signedIn && !onLoginPage) return '/login';
     if (signedIn && onLoginPage) return '/home';
     return null;
   },
 
   routes: [
-    // ── Unauthenticated ──────────────────────────────────────────────────────
+    // login route (no shell - can be accessed from anywhere)
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
-    // ── Authenticated shell (bottom nav) ─────────────────────────────────────
+    // shell route (bottom nav bar) — can be accessed from anywhere, but only if signed in (see redirect above)
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -129,10 +131,7 @@ final appRouter = GoRouter(
       ],
     ),
 
-    // ── Standalone routes (keep accessible from within the app) ─────────────
-    GoRoute(
-      path: '/faqs',
-      builder: (context, state) => const FaqScreen(),
-    ),
+    // FAQ route (no shell - can be accessed from anywhere)
+    GoRoute(path: '/faqs', builder: (context, state) => const FaqScreen()),
   ],
 );

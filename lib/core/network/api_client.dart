@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
-// ── Environment selector ───────────────────────────────────────────────────────
-// Change _env to switch where the app points.
+// Environment enum to switch between local, local device, and deployed backend URLs.
 enum _Env { local, localDevice, deployed }
 
 class ApiClient {
@@ -32,8 +31,7 @@ class ApiClient {
     }
   }
 
-  /// Builds headers, attaching a fresh Firebase ID token when a user is
-  /// signed in.
+  // Returns a map of headers including the Firebase ID token for authentication.
   Future<Map<String, String>> _headers() async {
     final token = await FirebaseAuth.instance.currentUser?.getIdToken();
     return {
@@ -42,6 +40,7 @@ class ApiClient {
     };
   }
 
+  // GET request to the backend API. Throws an exception for non-2xx responses.
   Future<dynamic> get(String endpoint) async {
     final response = await http.get(
       Uri.parse('$baseUrl$endpoint'),
@@ -55,6 +54,7 @@ class ApiClient {
     throw Exception('GET $endpoint failed: ${response.statusCode}');
   }
 
+  // POST request to the backend API. Throws an exception for non-2xx responses.
   Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
     final response = await http.post(
       Uri.parse('$baseUrl$endpoint'),

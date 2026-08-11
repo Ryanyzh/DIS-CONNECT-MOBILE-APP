@@ -22,25 +22,35 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   bool _fetchError = false;
 
   Future<void> _fetchById() async {
-    setState(() { _loading = true; _fetchError = false; });
+    setState(() {
+      _loading = true;
+      _fetchError = false;
+    });
     try {
-      final entry = await AnnouncementRepository(ApiClient())
-          .getAnnouncementById(widget.announcementId);
-      if (mounted) setState(() { _entry = entry; _loading = false; });
+      final entry = await AnnouncementRepository(
+        ApiClient(),
+      ).getAnnouncementById(widget.announcementId);
+      if (mounted)
+        setState(() {
+          _entry = entry;
+          _loading = false;
+        });
     } catch (e) {
       debugPrint('Failed to load announcement: $e');
-      if (mounted) setState(() { _loading = false; _fetchError = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _fetchError = true;
+        });
     }
   }
 
-  // ── Reading time ──────────────────────────────────────────────────────────
   String _readingTime(String text) {
     final words = text.trim().split(RegExp(r'\s+')).length;
     final minutes = (words / 200).ceil();
     return '$minutes min read';
   }
 
-  // ── Author initials ───────────────────────────────────────────────────────
   String _initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length >= 2) {
@@ -52,13 +62,11 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Fast path: entry was passed via GoRouter extra (from list tap)
     final extra = GoRouterState.of(context).extra;
     if (extra is AnnouncementEntry) {
       _entry = extra;
       return;
     }
-    // Slow path: deep link or home banner — fetch from API
     if (_entry == null && !_loading && !_fetchError) {
       _fetchById();
     }
@@ -85,17 +93,27 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFCBD5E1)),
+                      const Icon(
+                        Icons.wifi_off_rounded,
+                        size: 40,
+                        color: Color(0xFFCBD5E1),
+                      ),
                       const SizedBox(height: 12),
                       const Text(
                         'Could not load announcement',
-                        style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E293B),
+                        ),
                       ),
                       const SizedBox(height: 6),
                       const Text(
                         'Check your connection and try again.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       TextButton.icon(
@@ -125,7 +143,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
-          // ── App bar ────────────────────────────────────────────────────
+          // app bar
           SliverAppBar(
             backgroundColor: const Color(0xFFF8FAFC),
             elevation: 0,
@@ -145,27 +163,27 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ),
             ),
             centerTitle: true,
-            // ── Category color bar ─────────────────────────────────────
+            // category color bar
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(3),
               child: Container(height: 3, color: style.accentColor),
             ),
           ),
 
-          // ── Content ────────────────────────────────────────────────────
+          // content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Category  ─────────────────────────────────────────
+                  // category
                   Row(
                     children: [_CategoryChip(entry: entry, style: style)],
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Title ─────────────────────────────────────────────
+                  // title
                   Text(
                     entry.title,
                     style: AppTypography.displayXs.copyWith(
@@ -177,7 +195,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Author + meta row ─────────────────────────────────
+                  // author + meta row
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -237,7 +255,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // ── Read time ─────────────────────────────────────────
+                  // read time
                   Row(
                     children: [
                       const SizedBox(width: 48), // align under avatar
@@ -257,26 +275,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Divider ───────────────────────────────────────────
+                  // divider
                   const Divider(color: Color(0xFFF1F5F9), height: 1),
                   const SizedBox(height: 28),
 
-                  // ── Body text ─────────────────────────────────────────
-                  ...paragraphs.map((para) {
-                    // Detect bullet lines (start with •)
-                    if (para.contains('\n') ||
-                        para.startsWith('•') ||
-                        para.contains(':\n') ||
-                        RegExp(
-                          r'^[A-Z][^.]*:\s*$',
-                        ).hasMatch(para.split('\n').first)) {
-                      return _BodyBlock(text: para);
-                    }
-                    return _BodyBlock(text: para);
-                  }),
+                  // body text
+                  ...paragraphs.map((para) => _BodyBlock(text: para)),
                   const SizedBox(height: 32),
 
-                  // ── Tags ──────────────────────────────────────────────
+                  // tags
                   if (entry.tags.isNotEmpty) ...[
                     const Divider(color: Color(0xFFF1F5F9), height: 1),
                     const SizedBox(height: 20),
@@ -309,9 +316,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Chips
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _CategoryChip extends StatelessWidget {
   final AnnouncementEntry entry;
@@ -370,9 +375,7 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Body block — renders a single paragraph with smart formatting
-// ─────────────────────────────────────────────────────────────────────────────
+// Body text block - handles single-line labels, multi-line paragraphs, and bullet points
 
 class _BodyBlock extends StatelessWidget {
   final String text;
@@ -396,10 +399,9 @@ class _BodyBlock extends StatelessWidget {
       );
     }
 
-    // Multi-line block: first line may be a heading (e.g. "Date & Time:")
+    // If the block is multiple lines, treat the first line as a label if it ends with a colon or is short and capitalized. The rest of the lines are treated as body text.
     final firstLine = lines.first;
     final rest = lines.skip(1).toList();
-
     final isLabeledBlock =
         firstLine.endsWith(':') ||
         (firstLine.length < 50 &&
