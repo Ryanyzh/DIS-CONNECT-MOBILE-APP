@@ -31,6 +31,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  // Saves the updated profile information to Firebase, showing a snackbar on success or failure.
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -93,7 +94,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Avatar ─────────────────────────────────────────────────
+              // avatar
               Stack(
                 alignment: Alignment.bottomRight,
                 children: [
@@ -144,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 32),
 
-              // ── Fields ────────────────────────────────────────────────
+              // fields
               _SectionLabel(label: 'PERSONAL INFO'),
               const SizedBox(height: 10),
               _FormCard(
@@ -211,7 +212,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 32),
 
-              // ── Save button ───────────────────────────────────────────
+              // save button
               SizedBox(
                 width: double.infinity,
                 child: GradientButton(
@@ -230,9 +231,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
-// ─────────────────────────────────────────────────────────────────────────────
 
 InputDecoration _inputDecoration({required String hint, Widget? suffixIcon}) {
   return InputDecoration(

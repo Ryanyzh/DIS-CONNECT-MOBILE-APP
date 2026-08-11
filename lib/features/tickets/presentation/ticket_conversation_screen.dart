@@ -9,9 +9,7 @@ import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Model
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _Message {
   final String messageId;
@@ -51,9 +49,7 @@ class _Message {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TicketConversationScreen extends StatefulWidget {
   final String ticketId;
@@ -70,6 +66,7 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
   List<_Message> _messages = [];
   bool _loading = true;
   bool _sending = false;
+  bool _rtdbError = false;
 
   // RTDB subscription — cancelled in dispose().
   StreamSubscription<DatabaseEvent>? _rtdbSub;
@@ -92,38 +89,52 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
     super.dispose();
   }
 
-  // Listen to ticket_messages/{ticketId} in Realtime Database.
-  // onValue fires immediately with the full snapshot, then again on any change.
+  // Subscribes to the Firebase Realtime Database for new messages on this ticket, updating the state when messages arrive or when an error occurs
   void _subscribeToMessages() {
     final uid = _currentUid;
-    final ref = FirebaseDatabase.instance.ref('ticket_messages/${widget.ticketId}');
+    final ref = FirebaseDatabase.instance.ref(
+      'ticket_messages/${widget.ticketId}',
+    );
 
-    _rtdbSub = ref.onValue.listen((event) {
-      if (!mounted) return;
+    _rtdbSub = ref.onValue.listen(
+      (event) {
+        if (!mounted) return;
 
-      final raw = event.snapshot.value;
-      if (raw == null) {
-        setState(() { _messages = []; _loading = false; });
-        return;
-      }
+        final raw = event.snapshot.value;
+        if (raw == null) {
+          setState(() {
+            _messages = [];
+            _loading = false;
+          });
+          return;
+        }
 
-      // RTDB returns Map<dynamic, dynamic> keyed by message ID.
-      final messages = (raw as Map<dynamic, dynamic>)
-          .values
-          .map((v) => Map<String, dynamic>.from(v as Map))
-          .toList()
-        ..sort((a, b) =>
-            (a['created_at'] as String).compareTo(b['created_at'] as String));
+        // RTDB returns Map<dynamic, dynamic> keyed by message ID.
+        final messages =
+            (raw as Map<dynamic, dynamic>).values
+                .map((v) => Map<String, dynamic>.from(v as Map))
+                .toList()
+              ..sort(
+                (a, b) => (a['created_at'] as String).compareTo(
+                  b['created_at'] as String,
+                ),
+              );
 
-      setState(() {
-        _messages = messages.map((m) => _Message.fromJson(m, uid)).toList();
-        _loading = false;
-      });
-      _scrollToBottom();
-    }, onError: (e) {
-      debugPrint('RTDB message listener error: $e');
-      if (mounted) setState(() => _loading = false);
-    });
+        setState(() {
+          _messages = messages.map((m) => _Message.fromJson(m, uid)).toList();
+          _loading = false;
+        });
+        _scrollToBottom();
+      },
+      onError: (e) {
+        debugPrint('RTDB message listener error: $e');
+        if (mounted)
+          setState(() {
+            _loading = false;
+            _rtdbError = true;
+          });
+      },
+    );
   }
 
   Future<void> _send() async {
@@ -133,8 +144,6 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
     _replyController.clear();
     FocusScope.of(context).unfocus();
     try {
-      // The backend writes the message to RTDB — the listener above will
-      // automatically pick it up without a manual re-fetch.
       await _repo.sendMessage(widget.ticketId, text);
     } catch (e) {
       debugPrint('Failed to send message: $e');
@@ -184,6 +193,52 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
+                : _rtdbError
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.wifi_off_rounded,
+                            size: 40,
+                            color: Color(0xFFCBD5E1),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Could not load messages',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Check your connection and try again.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _loading = true;
+                                _rtdbError = false;
+                              });
+                              _rtdbSub?.cancel();
+                              _subscribeToMessages();
+                            },
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                 : _messages.isEmpty
                 ? const Center(
                     child: Text(
@@ -214,9 +269,7 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _MessageCard extends StatelessWidget {
   final _Message message;

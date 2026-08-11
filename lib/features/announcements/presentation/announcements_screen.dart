@@ -7,9 +7,7 @@ import 'package:disconnect_mobile/core/theme/design_system.dart';
 import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/features/announcements/data/announcement_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Data model
-// ─────────────────────────────────────────────────────────────────────────────
 
 class AnnouncementEntry {
   final String id;
@@ -19,7 +17,6 @@ class AnnouncementEntry {
   final String author;
   final String authorRole;
 
-  /// 'General' | 'Deadline' | 'Event' | 'Maintenance' | 'Urgent' | 'Result'
   final String category;
   final List<String> tags;
 
@@ -47,16 +44,16 @@ class AnnouncementEntry {
     );
   }
 
+  // Helper function to parse date from Firestore Timestamp or ISO string
   static DateTime _parseDate(dynamic raw) {
     if (raw is Timestamp) return raw.toDate().toLocal();
-    if (raw is String) return DateTime.tryParse(raw)?.toLocal() ?? DateTime.now();
+    if (raw is String)
+      return DateTime.tryParse(raw)?.toLocal() ?? DateTime.now();
     return DateTime.now();
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Category style
-// ─────────────────────────────────────────────────────────────────────────────
 
 class AnnouncementCategoryStyle {
   final Color badgeBg;
@@ -119,9 +116,7 @@ AnnouncementCategoryStyle announcementCategoryStyle(String category) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -136,7 +131,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   String _selectedCategory = 'All';
 
   static const _categories = [
-    'All', 'General', 'Deadline', 'Event', 'Maintenance', 'Urgent', 'Result',
+    'All',
+    'General',
+    'Deadline',
+    'Event',
+    'Maintenance',
+    'Urgent',
+    'Result',
   ];
 
   StreamSubscription<QuerySnapshot>? _firestoreSub;
@@ -157,8 +158,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
   Future<void> _load() async {
     try {
-      final entries =
-          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      final entries = await AnnouncementRepository(
+        ApiClient(),
+      ).getAnnouncements();
       if (mounted) {
         setState(() {
           _announcements = entries;
@@ -171,29 +173,30 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
   }
 
-  // Firestore listener is used only as a change signal — not as the data
-  // source. When the HR side creates/updates an announcement, the snapshot
-  // fires and we re-fetch the full list from the REST API.
   void _subscribeToChanges() {
     _firestoreSub = FirebaseFirestore.instance
         .collection('announcements')
         .snapshots()
-        .listen((snapshot) {
-      // Skip the first emission — it fires immediately on subscribe and
-      // would cause a redundant fetch alongside the initial _load() call.
-      if (_firstSnapshot) { _firstSnapshot = false; return; }
-      if (!mounted) return;
-      _refresh();
-    }, onError: (e) {
-      debugPrint('Firestore announcements listener error: $e');
-    });
+        .listen(
+          (snapshot) {
+            if (_firstSnapshot) {
+              _firstSnapshot = false;
+              return;
+            }
+            if (!mounted) return;
+            _refresh();
+          },
+          onError: (e) {
+            debugPrint('Firestore announcements listener error: $e');
+          },
+        );
   }
 
-  // Silently re-fetches in the background; keeps the existing list visible.
   Future<void> _refresh() async {
     try {
-      final entries =
-          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      final entries = await AnnouncementRepository(
+        ApiClient(),
+      ).getAnnouncements();
       if (mounted) setState(() => _announcements = entries);
     } catch (e) {
       debugPrint('Failed to refresh announcements: $e');
@@ -202,7 +205,8 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [..._announcements]..sort((a, b) => b.date.compareTo(a.date));
+    final sorted = [..._announcements]
+      ..sort((a, b) => b.date.compareTo(a.date));
     final filtered = _selectedCategory == 'All'
         ? sorted
         : sorted.where((e) => e.category == _selectedCategory).toList();
@@ -217,7 +221,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 color: const Color(0xFF4C39F2),
                 child: CustomScrollView(
                   slivers: [
-                    // ── App bar ─────────────────────────────────────────
+                    // app bar
                     SliverAppBar(
                       backgroundColor: const Color(0xFFF8FAFC),
                       elevation: 0,
@@ -236,7 +240,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                       centerTitle: true,
                     ),
 
-                    // ── Category filter chips ────────────────────────────
+                    // category filter chips
                     SliverToBoxAdapter(
                       child: SizedBox(
                         height: 48,
@@ -251,10 +255,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                             final style = cat == 'All'
                                 ? null
                                 : announcementCategoryStyle(cat);
-                            final selectedBg = style?.badgeBg ?? AppColors.primaryBgMid;
-                            final selectedText = style?.badgeText ?? AppColors.primaryDark;
+                            final selectedBg =
+                                style?.badgeBg ?? AppColors.primaryBgMid;
+                            final selectedText =
+                                style?.badgeText ?? AppColors.primaryDark;
                             return GestureDetector(
-                              onTap: () => setState(() => _selectedCategory = cat),
+                              onTap: () =>
+                                  setState(() => _selectedCategory = cat),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 180),
                                 padding: const EdgeInsets.symmetric(
@@ -262,9 +269,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                   vertical: 5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? selectedBg
-                                      : Colors.white,
+                                  color: isSelected ? selectedBg : Colors.white,
                                   borderRadius: BorderRadius.circular(9999),
                                   border: Border.all(
                                     color: isSelected
@@ -325,9 +330,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Announcement card
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _AnnouncementCard extends StatelessWidget {
   final AnnouncementEntry entry;
@@ -358,10 +361,10 @@ class _AnnouncementCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Category accent strip ───────────────────────────────
+                // category accent strip
                 Container(width: 4, color: style.accentColor),
 
-                // ── Content ─────────────────────────────────────────────
+                // content
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(14),

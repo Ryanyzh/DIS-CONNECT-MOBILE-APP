@@ -5,8 +5,7 @@ class AuthRepository {
 
   AuthRepository({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
 
-  /// Signs in with email/password via the Firebase client SDK and returns the
-  /// ID token. Throws [FirebaseAuthException] on bad credentials.
+  // Signs in with email and password, then returns the Firebase ID token for authenticated requests.
   Future<String> signInAndGetToken({
     required String email,
     required String password,
@@ -19,12 +18,12 @@ class AuthRepository {
     return idToken!;
   }
 
-  /// Returns a fresh ID token for the currently signed-in user, or null if
-  /// no user is signed in. Pass [forceRefresh] = true to bypass the cache.
+  // Returns the current user's Firebase ID token, optionally forcing a refresh.
   Future<String?> getIdToken({bool forceRefresh = false}) async {
     return _auth.currentUser?.getIdToken(forceRefresh);
   }
 
+  // Signs out the current user.
   Future<void> signOut() => _auth.signOut();
 
   User? get currentUser => _auth.currentUser;

@@ -29,10 +29,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
-  // ── Password requirement checks ──────────────────────────────────────────
-
+  // password requirement checks
   String get _newPw => _newPasswordController.text;
-
   bool get _reqLength => _newPw.length >= 8;
   bool get _reqUpper => _newPw.contains(RegExp(r'[A-Z]'));
   bool get _reqLower => _newPw.contains(RegExp(r'[a-z]'));
@@ -43,7 +41,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool get _allRequirementsMet =>
       _reqLength && _reqUpper && _reqLower && _reqDigit;
 
-  // ── Submit ────────────────────────────────────────────────────────────────
+  // Submits the password change request to Firebase, handling re-authentication and error messages
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -53,15 +51,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null || user.email == null) throw Exception('Not signed in');
-
-      // Re-authenticate with the current password first
       final credential = EmailAuthProvider.credential(
         email: user.email!,
         password: _currentPasswordController.text,
       );
       await user.reauthenticateWithCredential(credential);
-
-      // Update to the new password
       await user.updatePassword(_newPasswordController.text);
 
       if (mounted) {
@@ -118,7 +112,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Info banner ──────────────────────────────────────────────
+              // info banner
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -152,7 +146,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 28),
 
-              // ── Current password ─────────────────────────────────────────
+              // current password
               _SectionLabel(label: 'CURRENT PASSWORD'),
               const SizedBox(height: 10),
               _PasswordCard(
@@ -171,7 +165,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 24),
 
-              // ── New password ─────────────────────────────────────────────
+              // new password
               _SectionLabel(label: 'NEW PASSWORD'),
               const SizedBox(height: 10),
               _PasswordCard(
@@ -216,7 +210,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ── Requirements checklist ───────────────────────────────────
+              // requirements checklist
               _RequirementsCard(
                 requirements: [
                   _Requirement(label: 'At least 8 characters', met: _reqLength),
@@ -234,7 +228,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 32),
 
-              // ── Submit button ─────────────────────────────────────────────
+              // submit button
               SizedBox(
                 width: double.infinity,
                 child: GradientButton(
@@ -253,9 +247,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   final String label;

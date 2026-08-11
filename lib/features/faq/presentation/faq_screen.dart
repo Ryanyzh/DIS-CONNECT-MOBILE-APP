@@ -81,32 +81,41 @@ class _FaqScreenState extends State<FaqScreen> {
     }
   }
 
-  // Firestore listener is used only as a change signal — not as the data
-  // source. When HR creates/updates a FAQ, the snapshot fires and we
-  // re-fetch the full list from the REST API.
+  // Subscribes to Firestore changes for FAQs and refreshes the list when updates occur.
   void _subscribeToChanges() {
     _firestoreSub = FirebaseFirestore.instance
         .collection('faqs')
         .snapshots()
-        .listen((snapshot) {
-      if (_firstSnapshot) { _firstSnapshot = false; return; }
-      if (!mounted) return;
-      _refresh();
-    }, onError: (e) {
-      debugPrint('Firestore FAQs listener error: $e');
-    });
+        .listen(
+          (snapshot) {
+            if (_firstSnapshot) {
+              _firstSnapshot = false;
+              return;
+            }
+            if (!mounted) return;
+            _refresh();
+          },
+          onError: (e) {
+            debugPrint('Firestore FAQs listener error: $e');
+          },
+        );
   }
 
-  // Silently re-fetches in the background; keeps the existing list visible.
+  // Refreshes the FAQ list by fetching the latest data from the backend.
   Future<void> _refresh() async {
     try {
       final faqs = await FaqRepository(ApiClient()).getFaqs();
-      if (mounted) setState(() { _faqs = faqs; _error = null; });
+      if (mounted)
+        setState(() {
+          _faqs = faqs;
+          _error = null;
+        });
     } catch (e) {
       if (mounted) setState(() => _error = 'Failed to refresh FAQs.');
     }
   }
 
+  // Returns the list of FAQs filtered by the active category and search query.
   List<FaqEntry> get _filtered {
     var list = _faqs;
     if (_activeCategory != 'All') {
@@ -125,14 +134,15 @@ class _FaqScreenState extends State<FaqScreen> {
     return list;
   }
 
+  // Groups the filtered FAQs by category, excluding the "All" category.
   Map<String, List<FaqEntry>> get _grouped {
-    final result = <String, List<FaqEntry>>{};
+    final groups = <String, List<FaqEntry>>{};
     for (final cat in _categories.skip(1)) {
       final items = _filtered.where((f) => f.category == cat).toList()
         ..sort((a, b) => a.order.compareTo(b.order));
-      if (items.isNotEmpty) result[cat] = items;
+      if (items.isNotEmpty) groups[cat] = items;
     }
-    return result;
+    return groups;
   }
 
   @override
@@ -160,7 +170,7 @@ class _FaqScreenState extends State<FaqScreen> {
       ),
       body: Column(
         children: [
-          // ── Search bar ──────────────────────────────────────────────────
+          // search bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -200,7 +210,7 @@ class _FaqScreenState extends State<FaqScreen> {
             ),
           ),
 
-          // ── Category chips ──────────────────────────────────────────────
+          // category chips
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -248,7 +258,7 @@ class _FaqScreenState extends State<FaqScreen> {
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
-          // ── Body ────────────────────────────────────────────────────────
+          // body
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -274,34 +284,34 @@ class _FaqScreenState extends State<FaqScreen> {
                     onRefresh: _refresh,
                     color: const Color(0xFF4C39F2),
                     child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-                    children: [
-                      // When searching, show flat list; otherwise group by category
-                      if (_search.isNotEmpty || _activeCategory != 'All')
-                        _FaqGroup(
-                          faqs: _filtered
-                            ..sort((a, b) => a.order.compareTo(b.order)),
-                          showCategoryBadge: _activeCategory == 'All',
-                        )
-                      else
-                        ..._grouped.entries.map(
-                          (entry) => Padding(
-                            padding: const EdgeInsets.only(bottom: 20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _CategoryHeader(category: entry.key),
-                                const SizedBox(height: 8),
-                                _FaqGroup(
-                                  faqs: entry.value,
-                                  showCategoryBadge: false,
-                                ),
-                              ],
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+                      children: [
+                        // When searching, show flat list; otherwise group by category
+                        if (_search.isNotEmpty || _activeCategory != 'All')
+                          _FaqGroup(
+                            faqs: _filtered
+                              ..sort((a, b) => a.order.compareTo(b.order)),
+                            showCategoryBadge: _activeCategory == 'All',
+                          )
+                        else
+                          ..._grouped.entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _CategoryHeader(category: entry.key),
+                                  const SizedBox(height: 8),
+                                  _FaqGroup(
+                                    faqs: entry.value,
+                                    showCategoryBadge: false,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
+                      ],
+                    ),
                   ),
           ),
         ],

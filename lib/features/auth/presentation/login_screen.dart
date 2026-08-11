@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Converts FirebaseAuth error codes to user-friendly messages.
   String _friendlyError(String code) => switch (code) {
     'user-not-found' ||
     'wrong-password' ||
@@ -64,7 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _ => 'Login failed. Please try again.',
   };
 
-  // Clean field style for inside the white form card
   InputDecoration _field({
     required String label,
     required IconData icon,
@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 56),
 
-                    // ── Brand mark ────────────────────────────────────────
+                    // brand mark
                     Container(
                       width: 96,
                       height: 96,
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 18),
 
-                    // ── App name ──────────────────────────────────────────
+                    // app name
                     const Text(
                       'dis-connect',
                       style: TextStyle(
@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 36),
 
-                    // ── Form card ─────────────────────────────────────────
+                    // form card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
@@ -259,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            // ── Security footer ───────────────────────────────────────────
+            // security footer
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Row(

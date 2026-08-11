@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfile();
   }
 
+  // Loads the user's profile from the backend, falling back to Firebase Auth data if the REST call fails.
   Future<void> _loadProfile() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -33,16 +34,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     try {
       final profile = await UserRepository(ApiClient()).getUserById(uid);
-      if (mounted) setState(() { _profile = profile; _loading = false; });
+      if (mounted)
+        setState(() {
+          _profile = profile;
+          _loading = false;
+        });
     } catch (_) {
-      if (mounted) setState(() { _loading = false; _profileError = true; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _profileError = true;
+        });
     }
   }
 
+  // Computes the user's initials for the avatar circle, falling back to '?' if no name is available.
   @override
   Widget build(BuildContext context) {
     final firebaseUser = FirebaseAuth.instance.currentUser;
-    final displayName = _profile?.fullName ?? firebaseUser?.displayName ?? firebaseUser?.email ?? 'User';
+    final displayName =
+        _profile?.fullName ??
+        firebaseUser?.displayName ??
+        firebaseUser?.email ??
+        'User';
     final email = _profile?.email ?? firebaseUser?.email ?? '';
 
     String initials = '?';
@@ -79,24 +93,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── Error banner (non-blocking) ─────────────────────────
+                    // error banner (non-blocking)
                     if (_profileError) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF7ED),
-                          borderRadius: BorderRadius.circular(AppBorderRadius.wiseSm),
+                          borderRadius: BorderRadius.circular(
+                            AppBorderRadius.wiseSm,
+                          ),
                           border: Border.all(color: const Color(0xFFFED7AA)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline, size: 16, color: Color(0xFFEA580C)),
+                            const Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Color(0xFFEA580C),
+                            ),
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
                                 'Some profile details could not be loaded.',
-                                style: TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF9A3412),
+                                ),
                               ),
                             ),
                             GestureDetector(
@@ -115,12 +141,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
 
-                    // ── Avatar + name card ──────────────────────────────────
+                    // avatar + name card
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
+                        borderRadius: BorderRadius.circular(
+                          AppBorderRadius.wiseMd,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -170,7 +198,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (_profile?.role != null) ...[
                                   const SizedBox(height: 4),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: _profile!.role == 'hr'
                                           ? const Color(0xFFEDE9FE)
@@ -178,7 +209,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       borderRadius: BorderRadius.circular(99),
                                     ),
                                     child: Text(
-                                      _profile!.role == 'hr' ? 'HR Officer' : 'Scholar',
+                                      _profile!.role == 'hr'
+                                          ? 'HR Officer'
+                                          : 'Scholar',
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -196,41 +229,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
 
-                    // ── Scholar profile info ────────────────────────────────
+                    // scholar profile info
                     if (_profile?.role == 'scholar') ...[
                       const SizedBox(height: 16),
-                      _InfoCard(items: [
-                        if (_profile!.studentId != null)
-                          _InfoRow(label: 'Student ID', value: _profile!.studentId!),
-                        if (_profile!.faculty != null)
-                          _InfoRow(label: 'Faculty', value: _profile!.faculty!),
-                        if (_profile!.program != null)
-                          _InfoRow(label: 'Programme', value: _profile!.program!),
-                        if (_profile!.yearOfStudy != null)
-                          _InfoRow(label: 'Year of Study', value: 'Year ${_profile!.yearOfStudy}'),
-                        if (_profile!.scholarshipType != null)
-                          _InfoRow(label: 'Scholarship', value: _profile!.scholarshipType!),
-                        if (_profile!.phone != null)
-                          _InfoRow(label: 'Phone', value: _profile!.phone!),
-                      ]),
+                      _InfoCard(
+                        items: [
+                          if (_profile!.studentId != null)
+                            _InfoRow(
+                              label: 'Student ID',
+                              value: _profile!.studentId!,
+                            ),
+                          if (_profile!.faculty != null)
+                            _InfoRow(
+                              label: 'Faculty',
+                              value: _profile!.faculty!,
+                            ),
+                          if (_profile!.program != null)
+                            _InfoRow(
+                              label: 'Programme',
+                              value: _profile!.program!,
+                            ),
+                          if (_profile!.yearOfStudy != null)
+                            _InfoRow(
+                              label: 'Year of Study',
+                              value: 'Year ${_profile!.yearOfStudy}',
+                            ),
+                          if (_profile!.scholarshipType != null)
+                            _InfoRow(
+                              label: 'Scholarship',
+                              value: _profile!.scholarshipType!,
+                            ),
+                          if (_profile!.phone != null)
+                            _InfoRow(label: 'Phone', value: _profile!.phone!),
+                        ],
+                      ),
                     ],
 
-                    // ── HR profile info ─────────────────────────────────────
+                    // hr profile info
                     if (_profile?.role == 'hr') ...[
                       const SizedBox(height: 16),
-                      _InfoCard(items: [
-                        if (_profile!.employeeId != null)
-                          _InfoRow(label: 'Employee ID', value: _profile!.employeeId!),
-                        if (_profile!.designation != null)
-                          _InfoRow(label: 'Designation', value: _profile!.designation!),
-                        if (_profile!.phone != null)
-                          _InfoRow(label: 'Phone', value: _profile!.phone!),
-                      ]),
+                      _InfoCard(
+                        items: [
+                          if (_profile!.employeeId != null)
+                            _InfoRow(
+                              label: 'Employee ID',
+                              value: _profile!.employeeId!,
+                            ),
+                          if (_profile!.designation != null)
+                            _InfoRow(
+                              label: 'Designation',
+                              value: _profile!.designation!,
+                            ),
+                          if (_profile!.phone != null)
+                            _InfoRow(label: 'Phone', value: _profile!.phone!),
+                        ],
+                      ),
                     ],
 
                     const SizedBox(height: 16),
 
-                    // ── Settings rows ───────────────────────────────────────
+                    // settings rows
                     _SettingsCard(
                       items: [
                         _SettingsItem(
@@ -257,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // ── Sign out ────────────────────────────────────────────
+                    // sign out
                     SizedBox(
                       height: 52,
                       child: OutlinedButton.icon(
@@ -269,7 +327,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           side: const BorderSide(color: Color(0xFFE2E8F0)),
                           foregroundColor: AppColors.negative,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppBorderRadius.wiseLg),
+                            borderRadius: BorderRadius.circular(
+                              AppBorderRadius.wiseLg,
+                            ),
                           ),
                         ),
                         icon: const Icon(Icons.logout_rounded, size: 20),
@@ -315,13 +375,18 @@ class _InfoCard extends StatelessWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       item.label,
-                      style: AppTypography.bodySm.copyWith(color: AppColors.mute),
+                      style: AppTypography.bodySm.copyWith(
+                        color: AppColors.mute,
+                      ),
                     ),
                     Text(
                       item.value,

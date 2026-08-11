@@ -18,11 +18,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   @override
   void initState() {
     super.initState();
-    FaqRepository(ApiClient()).getFaqs().then((faqs) {
-      if (mounted) setState(() { _faqs = faqs.take(4).toList(); _loadingFaqs = false; });
-    }).catchError((_) {
-      if (mounted) setState(() => _loadingFaqs = false);
-    });
+    FaqRepository(ApiClient())
+        .getFaqs()
+        .then((faqs) {
+          if (mounted)
+            setState(() {
+              _faqs = faqs.take(4).toList();
+              _loadingFaqs = false;
+            });
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _loadingFaqs = false);
+        });
   }
 
   @override
@@ -51,12 +58,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         children: [
-          // ── Hero ──────────────────────────────────────────────────────
+          // hero
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF9A32F8), Color(0xFF4C39F2), Color(0xFF1D67F5)],
+                colors: [
+                  Color(0xFF9A32F8),
+                  Color(0xFF4C39F2),
+                  Color(0xFF1D67F5),
+                ],
                 stops: [0.0, 0.5, 1.0],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -65,7 +76,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.support_agent_rounded, size: 40, color: Colors.white),
+                const Icon(
+                  Icons.support_agent_rounded,
+                  size: 40,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -94,7 +109,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── FAQ ───────────────────────────────────────────────────────
+          // faq
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -121,7 +136,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 borderRadius: BorderRadius.circular(AppBorderRadius.wiseMd),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             )
           else if (_faqs.isEmpty)
             GestureDetector(
@@ -143,13 +160,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               ),
             )
           else
-            _FaqCard(
-              faqs: _faqs,
-              onViewAll: () => context.push('/faqs'),
-            ),
+            _FaqCard(faqs: _faqs, onViewAll: () => context.push('/faqs')),
           const SizedBox(height: 28),
 
-          // ── Contact ───────────────────────────────────────────────────
+          // contact
           const _SectionLabel(label: 'CONTACT SUPPORT'),
           const SizedBox(height: 10),
           _ContactCard(
@@ -177,7 +191,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── Quick tips ────────────────────────────────────────────────
+          // quick tips
           const _SectionLabel(label: 'QUICK TIPS'),
           const SizedBox(height: 10),
           _TipsCard(
@@ -194,9 +208,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   final String label;
@@ -237,9 +249,14 @@ class _FaqCard extends StatelessWidget {
               return Column(
                 children: [
                   Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
-                      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                      tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
                       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                       expandedCrossAxisAlignment: CrossAxisAlignment.start,
                       leading: Container(
@@ -288,7 +305,10 @@ class _FaqCard extends StatelessWidget {
             InkWell(
               onTap: onViewAll,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -314,7 +334,11 @@ class _FaqCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Icon(Icons.chevron_right, size: 18, color: Color(0xFFCBD5E1)),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: Color(0xFFCBD5E1),
+                    ),
                   ],
                 ),
               ),
@@ -375,7 +399,10 @@ class _ContactCard extends StatelessWidget {
                       : Radius.zero,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -404,11 +431,16 @@ class _ContactCard extends StatelessWidget {
                             if (item.badge != null) ...[
                               const SizedBox(height: 5),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF0FDF4),
                                   borderRadius: BorderRadius.circular(9999),
-                                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                                  border: Border.all(
+                                    color: const Color(0xFFBBF7D0),
+                                  ),
                                 ),
                                 child: Text(
                                   item.badge!,
@@ -423,7 +455,11 @@ class _ContactCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFFCBD5E1)),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Color(0xFFCBD5E1),
+                      ),
                     ],
                   ),
                 ),

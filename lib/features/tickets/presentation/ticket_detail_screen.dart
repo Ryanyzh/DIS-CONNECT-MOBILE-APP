@@ -10,9 +10,7 @@ import 'package:disconnect_mobile/core/network/api_client.dart';
 import 'package:disconnect_mobile/features/tickets/data/ticket_repository.dart';
 import 'package:disconnect_mobile/features/tickets/widgets/ticket_status_badge.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Data models
-// ─────────────────────────────────────────────────────────────────────────────
 
 class AttachmentFile {
   final String name;
@@ -22,7 +20,7 @@ class AttachmentFile {
   factory AttachmentFile.fromJson(Map<String, dynamic> json) {
     final sizeBytes = (json['file_size'] ?? json['size_bytes'] ?? 0) as num;
     return AttachmentFile(
-      name:   (json['file_name'] ?? json['name'] ?? '').toString(),
+      name: (json['file_name'] ?? json['name'] ?? '').toString(),
       sizeKb: (sizeBytes / 1024).ceil(),
     );
   }
@@ -108,10 +106,10 @@ class TicketDetailData {
       return '';
     }
 
-    final rawStatus   = json['status'];
+    final rawStatus = json['status'];
     final rawCategory = json['category'];
     final rawPriority = json['priority'];
-    final rawOfficer  = json['assigned_officer'] ?? json['assigned_to'];
+    final rawOfficer = json['assigned_officer'] ?? json['assigned_to'];
     final rawEscalation = json['escalation'];
 
     final colorCode = rawPriority is Map
@@ -121,32 +119,48 @@ class TicketDetailData {
     final rawAttachments = (json['attachments'] as List?) ?? [];
 
     return TicketDetailData(
-      ticketCode:       (json['ticket_code'] ?? json['display_id'] ?? '').toString(),
-      subject:          (json['subject'] ?? json['title'] ?? '').toString(),
-      category:         resolveNested(rawCategory, 'category_name'),
-      priority:         resolveNested(rawPriority, 'priority_name').isEmpty
-                            ? null
-                            : resolveNested(rawPriority, 'priority_name'),
-      priorityColor:    _colorFromHex(colorCode),
-      statusName:       resolveNested(rawStatus, 'status_name'),
-      statusType:       rawStatus is Map ? rawStatus['status_type']?.toString() : json['status_type']?.toString(),
-      isClosed:         (rawStatus is Map ? rawStatus['is_closed'] : json['is_closed']) == true,
-      description:      json['description']?.toString(),
-      source:           json['source']?.toString(),
-      officerName:      rawOfficer is Map ? rawOfficer['name']?.toString() : json['officer_name']?.toString(),
-      officerRole:      rawOfficer is Map ? rawOfficer['role']?.toString() : json['officer_role']?.toString(),
-      officerInitials:  rawOfficer is Map ? rawOfficer['initials']?.toString() : json['officer_initials']?.toString(),
-      isEscalated:      (json['is_escalated'] ?? false) == true,
-      escalatedToName:  rawEscalation is Map ? rawEscalation['to_name']?.toString() : json['escalated_to_name']?.toString(),
-      escalatedAt:      _parseDate(rawEscalation is Map ? rawEscalation['escalated_at'] : json['escalated_at']),
-      createdAt:        _parseDate(json['created_at']) ?? DateTime.now(),
-      updatedAt:        _parseDate(json['updated_at']) ?? DateTime.now(),
-      dueAt:            _parseDate(json['due_at'] ?? json['due_date']),
-      resolvedAt:       _parseDate(json['resolved_at']),
-      closedAt:         _parseDate(json['closed_at']),
-      attachments:      rawAttachments
-                            .map((a) => AttachmentFile.fromJson(a as Map<String, dynamic>))
-                            .toList(),
+      ticketCode: (json['ticket_code'] ?? json['display_id'] ?? '').toString(),
+      subject: (json['subject'] ?? json['title'] ?? '').toString(),
+      category: resolveNested(rawCategory, 'category_name'),
+      priority: resolveNested(rawPriority, 'priority_name').isEmpty
+          ? null
+          : resolveNested(rawPriority, 'priority_name'),
+      priorityColor: _colorFromHex(colorCode),
+      statusName: resolveNested(rawStatus, 'status_name'),
+      statusType: rawStatus is Map
+          ? rawStatus['status_type']?.toString()
+          : json['status_type']?.toString(),
+      isClosed:
+          (rawStatus is Map ? rawStatus['is_closed'] : json['is_closed']) ==
+          true,
+      description: json['description']?.toString(),
+      source: json['source']?.toString(),
+      officerName: rawOfficer is Map
+          ? rawOfficer['name']?.toString()
+          : json['officer_name']?.toString(),
+      officerRole: rawOfficer is Map
+          ? rawOfficer['role']?.toString()
+          : json['officer_role']?.toString(),
+      officerInitials: rawOfficer is Map
+          ? rawOfficer['initials']?.toString()
+          : json['officer_initials']?.toString(),
+      isEscalated: (json['is_escalated'] ?? false) == true,
+      escalatedToName: rawEscalation is Map
+          ? rawEscalation['to_name']?.toString()
+          : json['escalated_to_name']?.toString(),
+      escalatedAt: _parseDate(
+        rawEscalation is Map
+            ? rawEscalation['escalated_at']
+            : json['escalated_at'],
+      ),
+      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDate(json['updated_at']) ?? DateTime.now(),
+      dueAt: _parseDate(json['due_at'] ?? json['due_date']),
+      resolvedAt: _parseDate(json['resolved_at']),
+      closedAt: _parseDate(json['closed_at']),
+      attachments: rawAttachments
+          .map((a) => AttachmentFile.fromJson(a as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -166,9 +180,7 @@ class TicketDetailData {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TicketDetailScreen extends StatefulWidget {
   final String ticketId;
@@ -185,7 +197,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
 
   // Firestore listener — fires whenever the HR side changes the ticket document.
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _firestoreSub;
-  bool _firstSnapshot = true; // Skip the initial emission to avoid a double-fetch.
+  bool _firstSnapshot = true;
 
   @override
   void initState() {
@@ -200,41 +212,52 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     super.dispose();
   }
 
-  // Subscribe to the Firestore ticket document for real-time status updates.
-  // When the HR officer updates the ticket (status, assignment, escalation),
-  // Firestore pushes the change here and we re-fetch the full enriched detail
-  // from the REST API so all nested objects (status_name, officer info, etc.)
-  // are correctly resolved.
+  // Subscribes to Firestore changes for the ticket document, triggering a reload of the ticket details when changes occur
+  // The first snapshot is ignored to avoid unnecessary reloads on initial subscription
   void _subscribeToTicketChanges() {
     _firestoreSub = FirebaseFirestore.instance
         .collection('tickets')
         .doc(widget.ticketId)
         .snapshots()
-        .listen((snap) {
-      if (_firstSnapshot) {
-        _firstSnapshot = false; // Ignore the immediate first emission.
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _liveUpdating = true);
-      _load().then((_) {
-        if (mounted) setState(() => _liveUpdating = false);
-      });
-    }, onError: (e) {
-      debugPrint('Firestore ticket listener error: $e');
-    });
+        .listen(
+          (snap) {
+            if (_firstSnapshot) {
+              _firstSnapshot = false; // Ignore the immediate first emission.
+              return;
+            }
+            if (!mounted) return;
+            setState(() => _liveUpdating = true);
+            _load().then((_) {
+              if (mounted) setState(() => _liveUpdating = false);
+            });
+          },
+          onError: (e) {
+            debugPrint('Firestore ticket listener error: $e');
+          },
+        );
   }
 
+  // Loads the ticket details from the API and updates the state accordingly
   Future<void> _load() async {
     try {
-      final data = await TicketRepository(ApiClient()).getTicket(widget.ticketId);
-      if (mounted) setState(() { _detail = TicketDetailData.fromJson(data); _loading = false; });
+      final data = await TicketRepository(
+        ApiClient(),
+      ).getTicket(widget.ticketId);
+      if (mounted)
+        setState(() {
+          _detail = TicketDetailData.fromJson(data);
+          _loading = false;
+        });
     } catch (e) {
       debugPrint('Failed to load ticket: $e');
-      if (mounted) setState(() { _loading = false; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+        });
     }
   }
 
+  // Builds the UI for the ticket detail screen based on the current state
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -254,7 +277,15 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
             children: [
               const Text('Failed to load ticket'),
               const SizedBox(height: 12),
-              TextButton(onPressed: () { setState(() { _loading = true; }); _load(); }, child: const Text('Retry')),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _loading = true;
+                  });
+                  _load();
+                },
+                child: const Text('Retry'),
+              ),
             ],
           ),
         ),
@@ -273,35 +304,35 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Subject + meta ─────────────────────────────────────────
+                  // subject + meta
                   _SubjectCard(detail: detail),
                   const SizedBox(height: 20),
 
-                  // ── Status ─────────────────────────────────────────────────
+                  // status
                   const _SectionLabel(label: 'STATUS'),
                   const SizedBox(height: 8),
                   _StatusCard(detail: detail),
                   const SizedBox(height: 20),
 
-                  // ── Assigned to ────────────────────────────────────────────
+                  // assigned to
                   const _SectionLabel(label: 'ASSIGNED TO'),
                   const SizedBox(height: 8),
                   _OfficerCard(detail: detail),
                   const SizedBox(height: 20),
 
-                  // ── Escalation (conditional) ───────────────────────────────
+                  // escalation (conditional)
                   if (detail.isEscalated) ...[
                     _EscalationCard(detail: detail),
                     const SizedBox(height: 20),
                   ],
 
-                  // ── Timeline ───────────────────────────────────────────────
+                  // timeline
                   const _SectionLabel(label: 'TIMELINE'),
                   const SizedBox(height: 8),
                   _DatesCard(detail: detail),
                   const SizedBox(height: 20),
 
-                  // ── Description ────────────────────────────────────────────
+                  // description
                   if (detail.description != null &&
                       detail.description!.isNotEmpty) ...[
                     const _SectionLabel(label: 'DESCRIPTION'),
@@ -310,11 +341,14 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
                     const SizedBox(height: 20),
                   ],
 
-                  // ── Attachments ────────────────────────────────────────────
+                  // attachments
                   if (detail.attachments.isNotEmpty) ...[
                     const _SectionLabel(label: 'ATTACHMENTS'),
                     const SizedBox(height: 8),
-                    _AttachmentsCard(files: detail.attachments, ticketId: widget.ticketId),
+                    _AttachmentsCard(
+                      files: detail.attachments,
+                      ticketId: widget.ticketId,
+                    ),
                   ],
                 ],
               ),
@@ -325,7 +359,11 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, String ticketCode, bool liveUpdating) {
+  AppBar _buildAppBar(
+    BuildContext context,
+    String ticketCode,
+    bool liveUpdating,
+  ) {
     return AppBar(
       backgroundColor: const Color(0xFFF8FAFC),
       elevation: 0,
@@ -376,9 +414,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Sub-widgets
-// ─────────────────────────────────────────────────────────────────────────────
 
 // Title card
 class _SectionLabel extends StatelessWidget {
@@ -439,7 +475,9 @@ class _SubjectCard extends StatelessWidget {
                 _MetaChip(
                   icon: Icons.flag_outlined,
                   label: detail.priority!,
-                  bg: (detail.priorityColor ?? AppColors.body).withValues(alpha: 0.1),
+                  bg: (detail.priorityColor ?? AppColors.body).withValues(
+                    alpha: 0.1,
+                  ),
                   color: detail.priorityColor ?? AppColors.body,
                 ),
               if (detail.source != null)
@@ -831,7 +869,6 @@ class _DatesCard extends StatelessWidget {
   }
 }
 
-// Attachment card for each file
 class _AttachmentsCard extends StatelessWidget {
   final List<AttachmentFile> files;
   final String ticketId;
@@ -865,7 +902,6 @@ class _AttachmentsCard extends StatelessWidget {
   }
 }
 
-// Description card showing ticket description text
 class _DescriptionCard extends StatelessWidget {
   final String text;
   const _DescriptionCard({required this.text});
@@ -891,11 +927,54 @@ class _DescriptionCard extends StatelessWidget {
   }
 }
 
-// Attachments card showing list of attached files with download option
 class _AttachmentRow extends StatelessWidget {
   final AttachmentFile file;
   final String ticketId;
   const _AttachmentRow({required this.file, required this.ticketId});
+
+  static IconData _iconForFile(String name) {
+    final ext = name.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return Icons.picture_as_pdf_outlined;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return Icons.image_outlined;
+      case 'doc':
+      case 'docx':
+        return Icons.description_outlined;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart_outlined;
+      default:
+        return Icons.insert_drive_file_outlined;
+    }
+  }
+
+  static Color _colorForFile(String name) {
+    final ext = name.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return const Color(0xFFEF4444);
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return const Color(0xFF3B82F6);
+      case 'doc':
+      case 'docx':
+        return const Color(0xFF4C39F2);
+      case 'xls':
+      case 'xlsx':
+        return const Color(0xFF22C55E);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
 
   Future<void> _download(BuildContext context) async {
     try {
@@ -923,9 +1002,9 @@ class _AttachmentRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          const Icon(
-            Icons.picture_as_pdf_outlined,
-            color: Color(0xFFEF4444),
+          Icon(
+            _iconForFile(file.name),
+            color: _colorForFile(file.name),
             size: 26,
           ),
           const SizedBox(width: 10),
@@ -946,7 +1025,11 @@ class _AttachmentRow extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () => _download(context),
-            child: const Icon(Icons.download_outlined, color: AppColors.body, size: 20),
+            child: const Icon(
+              Icons.download_outlined,
+              color: AppColors.body,
+              size: 20,
+            ),
           ),
         ],
       ),

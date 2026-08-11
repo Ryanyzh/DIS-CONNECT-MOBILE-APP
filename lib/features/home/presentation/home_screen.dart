@@ -24,8 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _ticketsError = false;
   AnnouncementEntry? _latestAnnouncement;
 
-  // Derived from _tickets ────────────────────────────────────────────────────
-
+  // Computes the overview stats from the loaded tickets.
   TicketOverview get _overview {
     int inReview = 0, waiting = 0, resolved = 0, closed = 0;
     for (final t in _tickets) {
@@ -48,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Returns the three most recently updated tickets, sorted by updatedAt (or createdAt if updatedAt is null).
   List<Ticket> get _recentTickets {
     final sorted = [..._tickets]
       ..sort((a, b) {
@@ -58,8 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return sorted.take(3).toList();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
@@ -67,21 +65,34 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadLatestAnnouncement();
   }
 
+  // Loads the user's tickets from the API and updates the state accordingly.
   Future<void> _loadTickets() async {
-    setState(() { _ticketsError = false; });
+    setState(() {
+      _ticketsError = false;
+    });
     try {
       final tickets = await TicketRepository(ApiClient()).getTickets();
-      if (mounted) setState(() { _tickets = tickets; _loadingTickets = false; });
+      if (mounted)
+        setState(() {
+          _tickets = tickets;
+          _loadingTickets = false;
+        });
     } catch (e) {
       debugPrint('Failed to load home tickets: $e');
-      if (mounted) setState(() { _loadingTickets = false; _ticketsError = true; });
+      if (mounted)
+        setState(() {
+          _loadingTickets = false;
+          _ticketsError = true;
+        });
     }
   }
 
+  // Loads the latest announcement from the API and updates the state accordingly.
   Future<void> _loadLatestAnnouncement() async {
     try {
-      final entries =
-          await AnnouncementRepository(ApiClient()).getAnnouncements();
+      final entries = await AnnouncementRepository(
+        ApiClient(),
+      ).getAnnouncements();
       if (entries.isNotEmpty && mounted) {
         entries.sort((a, b) => b.date.compareTo(a.date));
         setState(() => _latestAnnouncement = entries.first);
@@ -106,15 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Greeting ─────────────────────────────────────────
+                    // greeting
                     const GreetingHeader(),
                     const SizedBox(height: 20),
 
-                    // ── Quick actions ────────────────────────────────────
+                    // quick actions
                     const QuickActionsSection(),
                     const SizedBox(height: 28),
 
-                    // ── My Overview ──────────────────────────────────────
+                    // my overview
                     if (_loadingTickets)
                       const _SectionSkeleton(height: 100)
                     else if (_ticketsError)
@@ -126,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     const SizedBox(height: 28),
 
-                    // ── Recent Tickets ───────────────────────────────────
+                    // recent tickets
                     if (_loadingTickets)
                       const _SectionSkeleton(height: 160)
                     else if (!_ticketsError)
@@ -137,11 +148,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     const SizedBox(height: 28),
 
-                    // ── Announcement banner ──────────────────────────────
+                    // announcement banner
                     if (ann != null) ...[
                       AnnouncementBanner(
                         entry: ann,
-                        onTap: () => context.push('/announcements/${ann.id}', extra: ann),
+                        onTap: () => context.push(
+                          '/announcements/${ann.id}',
+                          extra: ann,
+                        ),
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -171,7 +185,11 @@ class _ErrorRetryBlock extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, color: Color(0xFF94A3B8), size: 20),
+          const Icon(
+            Icons.wifi_off_rounded,
+            color: Color(0xFF94A3B8),
+            size: 20,
+          ),
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
@@ -179,10 +197,7 @@ class _ErrorRetryBlock extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
           ),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Retry'),
-          ),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );
