@@ -34,17 +34,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     try {
       final profile = await UserRepository(ApiClient()).getUserById(uid);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _profile = profile;
           _loading = false;
         });
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _profileError = true;
         });
+      }
     }
   }
 
@@ -52,11 +54,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final firebaseUser = FirebaseAuth.instance.currentUser;
-    final displayName =
-        _profile?.fullName ??
-        firebaseUser?.displayName ??
-        firebaseUser?.email ??
-        'User';
+    final displayName = (firebaseUser?.displayName?.isNotEmpty == true)
+        ? firebaseUser!.displayName!
+        : (_profile?.fullName.isNotEmpty == true)
+        ? _profile!.fullName
+        : firebaseUser?.email ?? 'User';
     final email = _profile?.email ?? firebaseUser?.email ?? '';
 
     String initials = '?';
@@ -294,7 +296,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _SettingsItem(
                           icon: Icons.person_outline,
                           label: 'Edit Profile',
-                          onTap: () => context.push('/profile/edit'),
+                          onTap: () => context.push('/profile/edit').then((_) {
+                            if (mounted) setState(() {});
+                            _loadProfile();
+                          }),
                         ),
                         _SettingsItem(
                           icon: Icons.lock_outline,
