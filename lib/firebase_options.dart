@@ -56,6 +56,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '719701894023',
     projectId: 'orbital-dis-connect',
     storageBucket: 'orbital-dis-connect.firebasestorage.app',
+    databaseURL:
+        'https://orbital-dis-connect-default-rtdb.asia-southeast1.firebasedatabase.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -65,6 +67,8 @@ class DefaultFirebaseOptions {
     projectId: 'orbital-dis-connect',
     storageBucket: 'orbital-dis-connect.firebasestorage.app',
     iosBundleId: 'com.example.disconnectMobile',
+    databaseURL:
+        'https://orbital-dis-connect-default-rtdb.asia-southeast1.firebasedatabase.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -74,6 +78,8 @@ class DefaultFirebaseOptions {
     projectId: 'orbital-dis-connect',
     storageBucket: 'orbital-dis-connect.firebasestorage.app',
     iosBundleId: 'com.example.disconnectMobile',
+    databaseURL:
+        'https://orbital-dis-connect-default-rtdb.asia-southeast1.firebasedatabase.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

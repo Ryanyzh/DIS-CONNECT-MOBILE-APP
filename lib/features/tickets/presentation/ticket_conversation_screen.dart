@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,19 @@ class _Message {
   });
 
   factory _Message.fromJson(Map<String, dynamic> json, String currentUid) {
-    final attachments = (json['attachments'] as List?) ?? [];
+    final rawAttachments = json['attachments'];
+    final List<String> attachmentNames;
+    if (rawAttachments is Map) {
+      attachmentNames = rawAttachments.values
+          .map(
+            (a) => (a as Map<dynamic, dynamic>)['file_name']?.toString() ?? '',
+          )
+          .where((n) => n.isNotEmpty)
+          .toList();
+    } else {
+      attachmentNames = [];
+    }
+
     return _Message(
       messageId: json['message_id'] as String? ?? '',
       senderName: json['sender_name'] as String? ?? 'Unknown',
@@ -41,10 +54,7 @@ class _Message {
           DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal() ??
           DateTime.now(),
       content: json['message_text'] as String? ?? '',
-      attachmentNames: attachments
-          .map((a) => (a as Map<String, dynamic>)['file_name'] as String? ?? '')
-          .where((n) => n.isNotEmpty)
-          .toList(),
+      attachmentNames: attachmentNames,
     );
   }
 }
@@ -92,12 +102,23 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
   // Subscribes to the Firebase Realtime Database for new messages on this ticket, updating the state when messages arrive or when an error occurs
   void _subscribeToMessages() {
     final uid = _currentUid;
-    final ref = FirebaseDatabase.instance.ref(
-      'ticket_messages/${widget.ticketId}',
+    final path = 'ticket_messages/${widget.ticketId}';
+
+    debugPrint('[RTDB] subscribing — uid=$uid  path=$path');
+
+    const dbUrl =
+        'https://orbital-dis-connect-default-rtdb.asia-southeast1.firebasedatabase.app';
+    final db = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL: dbUrl,
     );
+    debugPrint('[RTDB] databaseURL=${db.databaseURL}');
+
+    final ref = db.ref(path);
 
     _rtdbSub = ref.onValue.listen(
       (event) {
+        debugPrint('[RTDB] onValue fired — value=${event.snapshot.value}');
         if (!mounted) return;
 
         final raw = event.snapshot.value;
@@ -127,14 +148,17 @@ class _TicketConversationScreenState extends State<TicketConversationScreen> {
         _scrollToBottom();
       },
       onError: (e) {
-        debugPrint('RTDB message listener error: $e');
-        if (mounted)
+        debugPrint('[RTDB] onError fired — $e');
+        if (mounted) {
           setState(() {
             _loading = false;
             _rtdbError = true;
           });
+        }
       },
     );
+
+    debugPrint('[RTDB] listener registered — subscription=$_rtdbSub');
   }
 
   Future<void> _send() async {
